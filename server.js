@@ -39,7 +39,6 @@ function heatColor(val) {
 }
 
 // ─── Playwright scraper (resilient with detailed logging) ────────────────────
-```javascript
 async function scrapeAtlasReport(url) {
   console.log(`\n🔍 Scraping Atlas report: ${url}`);
   const browser = await chromium.launch({ 
@@ -145,10 +144,8 @@ async function scrapeAtlasReport(url) {
     throw new Error(`Scraping failed: ${err.message}`);
   }
 }
-```
 
 // ─── Data normalizer: maps scraped raw → clean report schema ──────────────────
-```javascript
 function normalizeData(raw) {
   console.log("\n📊 Normalizing scraped data...");
   
@@ -212,7 +209,6 @@ function normalizeData(raw) {
     keyInsights: buildInsights(raw.brandName, leaderboard, platforms, competitorMentions, totalMentions),
   };
 }
-```
 
 
 function buildInsights(brandName, leaderboard, platforms, competitors, totalMentions) {
