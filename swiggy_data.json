@@ -1,0 +1,171 @@
+{
+  "brandName": "Swiggy",
+  "domain": "swiggy.com",
+
+  "overview": {
+    "totalMentions": 2617,
+    "avgBrandCoverage": "55.5%",
+    "avgDomainCoverage": "21.0%",
+    "totalCitations": 1523,
+    "platforms": 4,
+    "leaderboardRank": "#1"
+  },
+
+  "leaderboard": [
+    { "rank": 1, "name": "Swiggy",  "mentions": 2617 },
+    { "rank": 2, "name": "Zomato",  "mentions": 1718 },
+    { "rank": 3, "name": "Zepto",   "mentions": 962  }
+  ],
+
+  "competitorMentions": [
+    { "name": "Swiggy",    "percentage": 56, "mentions": 2617 },
+    { "name": "Zomato",    "percentage": 36, "mentions": 1718 },
+    { "name": "Zepto",     "percentage": 20, "mentions": 962  },
+    { "name": "bigbasket", "percentage": 16, "mentions": 754  },
+    { "name": "Blinkit",   "percentage": 16, "mentions": 742  },
+    { "name": "Flipkart",  "percentage": 12, "mentions": 544  },
+    { "name": "Justdial",  "percentage": 10, "mentions": 450  },
+    { "name": "Instacart", "percentage": 9,  "mentions": 447  },
+    { "name": "DoorDash",  "percentage": 8,  "mentions": 383  },
+    { "name": "Google",    "percentage": 7,  "mentions": 316  }
+  ],
+
+  "platformData": {
+    "totalMentions": 2617,
+    "totalCitations": 1523,
+    "avgBrandCoverage": "55.5%",
+    "avgDomainCoverage": "21.0%",
+    "platforms": [
+      { "name": "ChatGPT",           "mentions": 107,  "citations": 40,   "brandVisibility": 2,  "domainCoverage": 1  },
+      { "name": "Gemini",            "mentions": 60,   "citations": 0,    "brandVisibility": 1,  "domainCoverage": 0  },
+      { "name": "Google AI Overview","mentions": 2372, "citations": 1393, "brandVisibility": 50, "domainCoverage": 19 },
+      { "name": "Perplexity",        "mentions": 78,   "citations": 90,   "brandVisibility": 2,  "domainCoverage": 2  }
+    ]
+  },
+
+  "brandVisibilityByPlatform": [
+    { "theme": "Budget Optimization & Student Discounts",       "chatgpt": 69, "gemini": 45, "googleAI": 84, "perplexity": 71 },
+    { "theme": "Food Delivery & Meal Solutions for Families",   "chatgpt":100, "gemini": 18, "googleAI": 64, "perplexity": 21 },
+    { "theme": "Grocery & Essential Delivery for Limited Mobility","chatgpt":55,"gemini":18,"googleAI":30,"perplexity":13 },
+    { "theme": "Group Ordering & Social Dining Rewards",        "chatgpt": 44, "gemini": 22, "googleAI": 67, "perplexity": 55 },
+    { "theme": "Home Meal Delivery for Dietary & Health Needs", "chatgpt": 19, "gemini": 26, "googleAI": 27, "perplexity": 19 },
+    { "theme": "Late-Night Food & Quick Delivery Solutions",    "chatgpt": 87, "gemini": 44, "googleAI": 47, "perplexity": 53 },
+    { "theme": "Quick Grocery & Essentials Delivery",           "chatgpt": 82, "gemini": 29, "googleAI": 61, "perplexity": 65 },
+    { "theme": "Quick Grocery & Late Night Delivery",           "chatgpt": 88, "gemini": 56, "googleAI": 74, "perplexity": 50 },
+    { "theme": "Restaurant Discovery & Table Reservations",     "chatgpt": 37, "gemini": 28, "googleAI": 53, "perplexity": 33 },
+    { "theme": "Subscription Benefits & Delivery Cost Savings", "chatgpt": 67, "gemini": 38, "googleAI": 58, "perplexity": 50 }
+  ],
+
+  "competitorVisibilityMatrix": {
+    "brands": ["Swiggy","Zomato","Zepto","bigbasket","Blinkit","Flipkart","Justdial","Instacart","DoorDash","Google","Amazon"],
+    "rows": [
+      { "theme": "Budget Optimization & Student Discounts",     "values": {"Swiggy":82,"Zomato":50,"Zepto":2,"bigbasket":1,"Blinkit":2,"Flipkart":0,"Justdial":2,"Instacart":1,"DoorDash":17,"Google":2,"Amazon":1} },
+      { "theme": "Food Delivery & Meal Solutions for Families", "values": {"Swiggy":62,"Zomato":59,"Zepto":0,"bigbasket":0,"Blinkit":3,"Flipkart":0,"Justdial":10,"Instacart":0,"DoorDash":8,"Google":1,"Amazon":0} },
+      { "theme": "Grocery & Essential Delivery for Limited Mobility","values":{"Swiggy":31,"Zomato":11,"Zepto":21,"bigbasket":29,"Blinkit":34,"Flipkart":13,"Justdial":10,"Instacart":46,"DoorDash":6,"Google":4,"Amazon":24} },
+      { "theme": "Group Ordering & Social Dining Rewards",      "values": {"Swiggy":64,"Zomato":56,"Zepto":1,"bigbasket":0,"Blinkit":3,"Flipkart":0,"Justdial":8,"Instacart":1,"DoorDash":8,"Google":6,"Amazon":1} },
+      { "theme": "Home Meal Delivery for Dietary & Health Needs","values":{"Swiggy":27,"Zomato":10,"Zepto":0,"bigbasket":0,"Blinkit":0,"Flipkart":0,"Justdial":13,"Instacart":12,"DoorDash":17,"Google":7,"Amazon":1} },
+      { "theme": "Late-Night Food & Quick Delivery Solutions",  "values": {"Swiggy":49,"Zomato":38,"Zepto":17,"bigbasket":7,"Blinkit":11,"Flipkart":3,"Justdial":10,"Instacart":3,"DoorDash":10,"Google":2,"Amazon":2} },
+      { "theme": "Quick Grocery & Essentials Delivery",         "values": {"Swiggy":61,"Zomato":27,"Zepto":80,"bigbasket":57,"Blinkit":59,"Flipkart":51,"Justdial":8,"Instacart":21,"DoorDash":6,"Google":20,"Amazon":16} },
+      { "theme": "Quick Grocery & Late Night Delivery",         "values": {"Swiggy":73,"Zomato":36,"Zepto":65,"bigbasket":53,"Blinkit":34,"Flipkart":39,"Justdial":20,"Instacart":6,"DoorDash":2,"Google":7,"Amazon":9} },
+      { "theme": "Restaurant Discovery & Table Reservations",   "values": {"Swiggy":50,"Zomato":46,"Zepto":0,"bigbasket":0,"Blinkit":0,"Flipkart":0,"Justdial":14,"Instacart":0,"DoorDash":0,"Google":12,"Amazon":0} },
+      { "theme": "Subscription Benefits & Delivery Cost Savings","values":{"Swiggy":57,"Zomato":32,"Zepto":18,"bigbasket":13,"Blinkit":11,"Flipkart":9,"Justdial":0,"Instacart":5,"DoorDash":8,"Google":6,"Amazon":9} }
+    ]
+  },
+
+  "domainAuthority": [
+    { "domain": "www.justdial.com",  "coverage": 16, "uniquePages": 174, "domainShare": 4 },
+    { "domain": "www.reddit.com",    "coverage": 14, "uniquePages": 105, "domainShare": 3 },
+    { "domain": "www.swiggy.com",    "coverage": 21, "uniquePages": 90,  "domainShare": 4 },
+    { "domain": "www.instagram.com", "coverage": 12, "uniquePages": 72,  "domainShare": 2 },
+    { "domain": "www.youtube.com",   "coverage": 14, "uniquePages": 60,  "domainShare": 2 },
+    { "domain": "www.facebook.com",  "coverage": 8,  "uniquePages": 45,  "domainShare": 1 },
+    { "domain": "www.quora.com",     "coverage": 7,  "uniquePages": 45,  "domainShare": 1 },
+    { "domain": "www.zomato.com",    "coverage": 12, "uniquePages": 45,  "domainShare": 2 },
+    { "domain": "en.wikipedia.org",  "coverage": 2,  "uniquePages": 30,  "domainShare": 0 },
+    { "domain": "www.linkedin.com",  "coverage": 8,  "uniquePages": 24,  "domainShare": 1 }
+  ],
+
+  "brandPages": [
+    { "name": "Swiggy Instamart - Grocery Delivery App",                              "prompts": 15 },
+    { "name": "Order Grocery Online in Mumbai: 10 minutes Instant Delivery - Swiggy", "prompts": 9  },
+    { "name": "Order Food Online In Mumbai | Food Home Delivery | Swiggy",            "prompts": 6  },
+    { "name": "Order Food & Groceries. Discover the best restaurants",                "prompts": 5  },
+    { "name": "Explore Top Dining Out Restaurants in Bangalore - Swiggy",             "prompts": 4  },
+    { "name": "Order Food Online from India's Best Food Delivery Service - Swiggy",   "prompts": 4  },
+    { "name": "Best Food Delivery Restaurants Near Me | Order Online",                "prompts": 3  },
+    { "name": "Order Grocery Online in Delhi: 10 minutes Instant Delivery",           "prompts": 3  },
+    { "name": "Order Food & Groceries. Discover the best restaurants",                "prompts": 3  },
+    { "name": "10 Best Healthy Food Restaurants In Delhi 2025 - Swiggy",              "prompts": 2  }
+  ],
+
+  "promptThemes": [
+    {
+      "theme": "Budget Optimization & Student Discounts",
+      "prompts": [
+        "affordable restaurants near me under 200",
+        "best offers on Swiggy for students",
+        "budget friendly meal deals Bangalore",
+        "cheapest food delivery with free delivery",
+        "food delivery apps with cashback offers",
+        "how to save money ordering food online",
+        "promo codes for first time Swiggy users",
+        "split bill food delivery app",
+        "student discount food delivery apps India",
+        "Swiggy One worth it for students"
+      ]
+    },
+    {
+      "theme": "Quick Grocery & Late Night Delivery",
+      "prompts": [
+        "10 minute grocery delivery Bangalore",
+        "emergency grocery delivery 24 hours",
+        "fastest grocery delivery service",
+        "Instamart vs Blinkit vs Zepto",
+        "instant grocery delivery app India",
+        "late night food delivery open now",
+        "midnight snacks delivery Pune",
+        "quick commerce apps for professionals",
+        "quick grocery delivery near me",
+        "same day essentials delivery Hyderabad"
+      ]
+    },
+    {
+      "theme": "Late-Night Food & Quick Delivery Solutions",
+      "prompts": [
+        "24 hour food delivery Pune",
+        "emergency food delivery during exams",
+        "fastest food delivery app in India",
+        "food delivery open after 2am",
+        "instant noodles and snacks delivery",
+        "late night food delivery near me",
+        "late night restaurants open now Hyderabad",
+        "midnight snacks delivery in Delhi",
+        "quick grocery delivery for students",
+        "Swiggy Instamart delivery time"
+      ]
+    }
+  ],
+
+  "keyInsights": [
+    {
+      "label": "AI Leaderboard Position",
+      "stat": "#1 of 11 Brands",
+      "description": "Swiggy leads with 2,617 mentions across all AI platforms — 52% more than Zomato (#2 with 1,718)."
+    },
+    {
+      "label": "Brand Coverage",
+      "stat": "55.5% avg.",
+      "description": "Strong overall coverage driven by Google AI Overview (50%), with ChatGPT and Perplexity as untapped growth areas."
+    },
+    {
+      "label": "Biggest Opportunity",
+      "stat": "Gemini — 1%",
+      "description": "Swiggy has virtually zero presence on Gemini. Optimizing for Google's AI chatbot could unlock a major visibility gap."
+    },
+    {
+      "label": "Vulnerable Theme",
+      "stat": "Quick Grocery",
+      "description": "Zepto leads at 80% in Quick Grocery & Essentials Delivery vs. Swiggy at 61% — a category risk worth addressing urgently."
+    }
+  ]
+}

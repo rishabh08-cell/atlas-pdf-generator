@@ -1,0 +1,19 @@
+{
+  "name": "atlas-geo-pdf-generator",
+  "version": "1.0.0",
+  "description": "Atlas GEO Audit URL → PDF generator by pepper.inc",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "playwright": "^1.40.0",
+    "pptxgenjs": "^3.12.0",
+    "uuid": "^9.0.0"
+  }
+}
