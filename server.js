@@ -82,9 +82,7 @@ async function scrapeAtlasReport(url) {
 
             // ── Competitor mentions (the full list with %) ─────────────────────────────────
             const competitorMentions = [];
-            // Look for the "Competitor mentions vs. [Brand]" section
             const compSection = textContent.match(/Competitor mentions vs\. .+?([\s\S]{0,1500})(?:Brand Visibility|Luminous mentions|$)/)?.[1] || "";
-            // Pattern: "Luminous 17% 65 mentions" or "L Luminous 17% 65 mentions"
             const compPattern = /^[A-Z]{1,3}\s+([A-Za-z\s-]+?)\s+(\d+)%\s+(\d+)\s+mentions/gm;
             let compMatch;
             while ((compMatch = compPattern.exec(compSection)) !== null) {
@@ -94,27 +92,65 @@ async function scrapeAtlasReport(url) {
 
             // ── Platform data ────────────────────────────────────────────────────────────
             const platforms = [];
-            // Look for the platform table section
-            const platformSection = textContent.match(/(?:Luminous mentions by platform|mentions by platform)([\s\S]{0,2000})/)?.[1] || "";
-            // Pattern: "ChatGPT 19 6 5% 2%"
-            const platformLines = platformSection.split('\n').filter(line =>
-                /^(ChatGPT|Gemini|Google AI Overview|Perplexity)/.test(line)
-            );
-            platformLines.forEach(line => {
-                const parts = line.split(/\s+/).filter(Boolean);
-                if (parts.length >= 4) {
-                    const name = parts[0] === 'Google' ? 'Google AI Overview' : parts[0];
-                    const idx = parts[0] === 'Google' ? 3 : 1; // Adjust for "Google AI Overview" being 3 words
+
+            // Find the section after "mentions by platform"
+            const platformSectionMatch = textContent.match(/mentions by platform([\s\S]{0,2500})/);
+            if (platformSectionMatch) {
+                const platformSection = platformSectionMatch[1];
+
+                // Extract each platform's data
+                const chatgptMatch = platformSection.match(/ChatGPT\s+(\d+)\s+(\d+)\s+(\d+)%\s+(\d+)%/);
+                const geminiMatch = platformSection.match(/Gemini\s+(\d+)\s+(\d+)\s+(\d+)%\s+(\d+)%/);
+                const googleMatch = platformSection.match(/Google AI Overview\s+(\d+)\s+(\d+)\s+(\d+)%\s+(\d+)%/);
+                const perplexityMatch = platformSection.match(/Perplexity\s+(\d+)\s+(\d+)\s+(\d+)%\s+(\d+)%/);
+
+                if (chatgptMatch) {
                     platforms.push({
-                        name,
-                        mentions: getNum(parts[idx]),
-                        citations: getNum(parts[idx + 1]),
-                        brandVisibility: getPercent(parts[idx + 2] || '0'),
-                        domainCoverage: getPercent(parts[idx + 3] || '0')
+                        name: "ChatGPT",
+                        mentions: parseInt(chatgptMatch[1]),
+                        citations: parseInt(chatgptMatch[2]),
+                        brandVisibility: parseInt(chatgptMatch[3]),
+                        domainCoverage: parseInt(chatgptMatch[4])
+                    });
+                    log.push(`✓ ChatGPT: ${chatgptMatch[1]} mentions, ${chatgptMatch[3]}% visibility`);
+                }
+
+                if (geminiMatch) {
+                    platforms.push({
+                        name: "Gemini",
+                        mentions: parseInt(geminiMatch[1]),
+                        citations: parseInt(geminiMatch[2]),
+                        brandVisibility: parseInt(geminiMatch[3]),
+                        domainCoverage: parseInt(geminiMatch[4])
                     });
                 }
-            });
-            if (platforms.length > 0) { log.push(`✓ Platforms: ${platforms.length} entries`); }
+
+                if (googleMatch) {
+                    platforms.push({
+                        name: "Google AI Overview",
+                        mentions: parseInt(googleMatch[1]),
+                        citations: parseInt(googleMatch[2]),
+                        brandVisibility: parseInt(googleMatch[3]),
+                        domainCoverage: parseInt(googleMatch[4])
+                    });
+                }
+
+                if (perplexityMatch) {
+                    platforms.push({
+                        name: "Perplexity",
+                        mentions: parseInt(perplexityMatch[1]),
+                        citations: parseInt(perplexityMatch[2]),
+                        brandVisibility: parseInt(perplexityMatch[3]),
+                        domainCoverage: parseInt(perplexityMatch[4])
+                    });
+                }
+
+                if (platforms.length > 0) {
+                    log.push(`✓ Platforms: ${platforms.length} entries with real data`);
+                } else {
+                    log.push(`▲ No platform data found`);
+                }
+            }
 
             // ── Overall stats ────────────────────────────────────────────────────────────
             let totalMentions = 0;
@@ -157,10 +193,10 @@ function normalizeData(raw) {
     let platforms = raw.platforms && raw.platforms.length > 0
         ? raw.platforms
         : [
-            { name: "ChatGPT",          mentions: 0, citations: 0, brandVisibility: 0,  domainCoverage: 0 },
-            { name: "Gemini",           mentions: 0, citations: 0, brandVisibility: 0,  domainCoverage: 0 },
+            { name: "ChatGPT",            mentions: 0, citations: 0, brandVisibility: 0,  domainCoverage: 0 },
+            { name: "Gemini",             mentions: 0, citations: 0, brandVisibility: 0,  domainCoverage: 0 },
             { name: "Google AI Overview", mentions: totalMentions, citations: raw.totalCitations || 0, brandVisibility: 50, domainCoverage: 20 },
-            { name: "Perplexity",       mentions: 0, citations: 0, brandVisibility: 0,  domainCoverage: 0 },
+            { name: "Perplexity",         mentions: 0, citations: 0, brandVisibility: 0,  domainCoverage: 0 },
         ];
 
     const topBrand = leaderboard[0];
@@ -234,11 +270,11 @@ function buildInsights(brandName, leaderboard, platforms, competitors, totalMent
         },
     ];
 }
-// ─── PPTX builder (same slide functions as before, condensed) ─────────────────
+// ─── PPTX builder ─────────────────────────────────────────────────────────────
 function addSlideHeader(slide, pres, title, subtitle) {
     slide.addShape(pres.shapes.RECTANGLE, { x:0, y:0, w:10, h:0.55, fill:{color:C.navy}, line:{color:C.navy} });
-    slide.addText("atlas",        { x:0.3, y:0.09, w:1.2, h:0.36, fontSize:14, bold:true, color:C.orange,  fontFace:"Calibri", margin:0 });
-    slide.addText("by pepper.inc",{ x:1.48, y:0.14, w:1.5, h:0.27, fontSize:8,  color:C.lilac,  fontFace:"Calibri", margin:0 });
+    slide.addText("atlas",         { x:0.3,  y:0.09, w:1.2, h:0.36, fontSize:14, bold:true, color:C.orange, fontFace:"Calibri", margin:0 });
+    slide.addText("by pepper.inc", { x:1.48, y:0.14, w:1.5, h:0.27, fontSize:8,  color:C.lilac,  fontFace:"Calibri", margin:0 });
     if (subtitle) {
         slide.addText(subtitle.toUpperCase(), { x:0, y:0.1, w:9.7, h:0.34, fontSize:8, color:C.lilac, fontFace:"Calibri", align:"right", charSpacing:2, margin:0 });
     }
@@ -267,15 +303,15 @@ function buildPPTX(data, outputPath) {
         s.addText(data.domain,    { x:0.5, y:2.7, w:5, h:0.4, fontSize:14, color:C.lilac, fontFace:"Calibri", margin:0 });
         s.addShape(pres.shapes.RECTANGLE, { x:0.5, y:3.2, w:1.5, h:0.04, fill:{color:C.orange}, line:{color:C.orange} });
         const stats = [
-            { label:"Total Mentions",    value: data.overview.totalMentions.toLocaleString() },
-            { label:"Brand Coverage",    value: data.overview.avgBrandCoverage },
-            { label:"AI Platforms",      value: data.overview.platforms.toString() },
-            { label:"Leaderboard Rank",  value: data.overview.leaderboardRank },
+            { label:"Total Mentions",   value: data.overview.totalMentions.toLocaleString() },
+            { label:"Brand Coverage",   value: data.overview.avgBrandCoverage },
+            { label:"AI Platforms",     value: data.overview.platforms.toString() },
+            { label:"Leaderboard Rank", value: data.overview.leaderboardRank },
         ];
         stats.forEach((st, i) => {
             const x = 0.5 + i * 2.3;
             s.addText(st.value, { x, y:3.4, w:2.1, h:0.65, fontSize:26, bold:true, color:C.orange, fontFace:"Calibri", margin:0 });
-            s.addText(st.label, { x, y:4.0, w:2.1, h:0.3,  fontSize:9,  color:C.lilac, fontFace:"Calibri", margin:0 });
+            s.addText(st.label, { x, y:4.0, w:2.1, h:0.3,  fontSize:9,  color:C.lilac,  fontFace:"Calibri", margin:0 });
         });
         s.addText("Powered by atlas · pepper.inc", { x:0.5, y:5.15, w:9, h:0.28, fontSize:8, color:C.slate, fontFace:"Calibri", margin:0 });
     }
@@ -300,7 +336,7 @@ function buildPPTX(data, outputPath) {
                 const barY = chartBottom - barH;
                 const isC = brand.name === data.brandName;
                 const col = isC ? C.orange : (i === 1 ? "BDBDCD" : "C0824A");
-                s.addText(brand.name, { x:x-0.2, y:barY-0.42, w:barW+0.4, h:0.32, fontSize:12, bold:isC, color:isC?C.orange:C.navy, align:"center", fontFace:"Calibri", margin:0 });
+                s.addText(brand.name, { x:x-0.2, y:barY-0.50, w:barW+0.4, h:0.32, fontSize:12, bold:isC, color:isC?C.orange:C.navy, align:"center", fontFace:"Calibri", margin:0 });
                 s.addShape(pres.shapes.OVAL, { x:x+barW/2-0.26, y:barY-0.78, w:0.52, h:0.52, fill:{color:C.white}, line:{color:C.lightgray} });
                 s.addText(`#${brand.rank}`, { x:x+barW/2-0.26, y:barY-0.78, w:0.52, h:0.52, fontSize:13, bold:true, color:C.navy, align:"center", valign:"middle", fontFace:"Calibri", margin:0 });
                 s.addShape(pres.shapes.RECTANGLE, { x, y:barY, w:barW, h:barH, fill:{color:col}, line:{color:col}, shadow:makeShadow() });
@@ -364,7 +400,7 @@ function buildPPTX(data, outputPath) {
             const bvW = (p.brandVisibility / 100) * 2.3;
             s.addShape(pres.shapes.RECTANGLE, { x:colX[3],     y:y+0.06, w:Math.max(bvW,0.05), h:0.18, fill:{color:C.navy},      line:{color:C.navy}      });
             s.addShape(pres.shapes.RECTANGLE, { x:colX[3]+bvW, y:y+0.06, w:2.3-bvW,            h:0.18, fill:{color:C.lightgray}, line:{color:C.lightgray} });
-            s.addText(`${p.brandVisibility}%`, { x:colX[3], y, w:0.5, h:0.28, fontSize:8, bold:true, color:C.navy, fontFace:"Calibri", margin:0 });
+            s.addText(`${p.brandVisibility}%`, { x:colX[3], y, w:0.5, h:0.28, fontSize:8, bold:true, color:C.navy,   fontFace:"Calibri", margin:0 });
             const dcW = (p.domainCoverage / 100) * 2.3;
             s.addShape(pres.shapes.RECTANGLE, { x:colX[4],     y:y+0.06, w:Math.max(dcW,0.05), h:0.18, fill:{color:C.violet},    line:{color:C.violet}    });
             s.addShape(pres.shapes.RECTANGLE, { x:colX[4]+dcW, y:y+0.06, w:2.3-dcW,            h:0.18, fill:{color:C.lightgray}, line:{color:C.lightgray} });
@@ -407,24 +443,17 @@ app.post("/generate", async (req, res) => {
     const pptxOut = path.join(TMP, `${id}.pptx`);
     const pdfOut  = path.join(TMP, `${id}.pdf`);
     try {
-        // 1. Scrape
         const raw  = await scrapeAtlasReport(url);
-        // 2. Normalize
         const data = normalizeData(raw);
-        // 3. Build PPTX
         buildPPTX(data, pptxOut);
-        // Wait for file to be written
         await new Promise(r => setTimeout(r, 1000));
-        // 4. Convert to PDF via LibreOffice
         console.log("📄 Converting to PDF...");
         execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 60000 });
         if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
-        // 5. Stream PDF back
         const brandSlug = data.brandName.toLowerCase().replace(/\s+/g, "-");
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", `attachment; filename="${brandSlug}-geo-audit.pdf"`);
         fs.createReadStream(pdfOut).pipe(res);
-        // Cleanup after send
         res.on("finish", () => {
             try { fs.unlinkSync(pptxOut); fs.unlinkSync(pdfOut); } catch {}
         });
