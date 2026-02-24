@@ -686,9 +686,8 @@ app.post("/generate", async (req, res) => {
 
     if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
 
-    const brandSlug = data.brandName.toLowerCase().replace(/\s+/g, "-");
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${brandSlug}-geo-audit.pdf"`);
+    const brandSlug = data.brandName.replace(/[^a-zA-Z0-9\s]/g, "").trim();
+    res.setHeader("Content-Disposition", `attachment; filename="${brandSlug} x Pepper - GEO report.pdf"`);
     fs.createReadStream(pdfOut).pipe(res);
     res.on("finish", () => {
       try { fs.unlinkSync(pptxOut); fs.unlinkSync(pdfOut); } catch {}
