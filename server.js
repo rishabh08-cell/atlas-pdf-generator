@@ -691,12 +691,14 @@ app.post("/generate", async (req, res) => {
 
     if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
 
-    const brandSlug = data.brandName.replace(/[^a-zA-Z0-9\s]/g, "").trim();
-    res.setHeader("Content-Disposition", `attachment; filename="${brandSlug} x Pepper - GEO report.pdf"`);
-    fs.createReadStream(pdfOut).pipe(res);
-    res.on("finish", () => {
-      try { fs.unlinkSync(pptxOut); fs.unlinkSync(pdfOut); } catch {}
-    });
+    const fileName = `${data.brandName} x Pepper - GEO report.pdf`;
+    res.download(pdfOut, fileName, (err) => {
+      try { fs.unlinkSync(pptxOut); } catch {}
+      try { fs.unlinkSync(pdfOut); } catch {}
+      if (err && !res.headersSent) {
+        res.status(500).json({ error: "Download failed." });
+      }
+    });;
   } catch (err) {
     console.error("❌ Error:", err.message);
     res.status(500).json({ error: err.message || "Generation failed." });
