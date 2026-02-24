@@ -13,495 +13,677 @@ app.use(express.static("public"));
 const TMP = path.join(__dirname, "tmp");
 if (!fs.existsSync(TMP)) fs.mkdirSync(TMP);
 
-// ─── Color palette ──────────────────────────────────────────────────────────────
+// ─── Color palette ────────────────────────────────────────────────────────────
 const C = {
-        navy:      "1A1A3E",
-        purple:    "3D3A8C",
-        violet:    "5B4FBE",
-        lilac:     "9B93E3",
-        orange:    "F4A419",
-        white:     "FFFFFF",
-        offwhite:  "F8F7FF",
-        slate:     "64748B",
-        lightgray: "E8E6F5",
-        darkgray:  "2D2B55",
-        navalt:    "F2F1EB",
+  navy:      "1A1A3E",
+  purple:    "3D3A8C",
+  violet:    "5B4FBE",
+  lilac:     "9B93E3",
+  orange:    "F4A419",
+  yellow:    "F5C842",
+  white:     "FFFFFF",
+  offwhite:  "F8F7FF",
+  slate:     "64748B",
+  lightgray: "E8E6F5",
+  darkgray:  "2D2B55",
+  teal:      "0891B2",
+  green:     "16A34A",
 };
 
 function makeShadow() {
-        return { type: "outer", blur: 8, offset: 2, angle: 135, color: "000000", opacity: 0.1 };
+  return { type: "outer", blur: 6, offset: 2, angle: 135, color: "000000", opacity: 0.08 };
 }
 
-function heatColor(val) {
-        if (val >= 70) return C.navy;
-        if (val >= 40) return C.violet;
-        if (val >= 20) return C.lilac;
-        return "DDDAF5";
-}
-
-// ─── Atlas tab URLs ──────────────────────────────────────────────────────────────
+// ─── Atlas tab URL resolver ────────────────────────────────────────────────────
 function getAtlasTabUrls(baseUrl) {
-        // Normalise: strip any trailing path segment so we always start from the report root
-    const root = baseUrl.replace(/\/(overview|competitors|platforms|prompts.*)?$/, "");
-        return {
-                    overview:    `${root}/overview`,
-                    competitors: `${root}/competitors`,
-                    platforms:   `${root}/platforms`,
-                    prompts:     `${root}/prompts`,
-        };
+  const root = baseUrl.replace(/\/(overview|competitors-comparison|platforms|prompts-themes).*$/, "");
+  return {
+    overview:    root + "/overview",
+    competitors: root + "/competitors-comparison",
+    platforms:   root + "/platforms",
+    prompts:     root + "/prompts-themes",
+  };
 }
 
-// ─── Playwright scraper — screenshot-based ───────────────────────────────────────
+// ─── STEP 1: Scrape — visit each tab, screenshot, send to Claude Vision ───────
 async function scrapeAtlasReport(url) {
-        console.log(`\n🔍 Scraping Atlas report: ${url}`);
+  console.log("\n🔍 Scraping Atlas report:", url);
+  const browser = await chromium.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"], headless: true });
+  const tabs = getAtlasTabUrls(url);
+  const screenshots = {};
 
-    const browser = await chromium.launch({
-                args: ["--no-sandbox", "--disable-setuid-sandbox"],
-                headless: true,
-    });
-
-    const tabs = getAtlasTabUrls(url);
-        const screenshots = {}; // { overview: <base64>, competitors: <base64>, ... }
-
-    try {
-                for (const [tabName, tabUrl] of Object.entries(tabs)) {
-                                console.log(`  📸 Capturing tab: ${tabName} → ${tabUrl}`);
-                                const page = await browser.newPage();
-                                await page.setViewportSize({ width: 1440, height: 900 });
-
-                    try {
-                                        await page.goto(tabUrl, { waitUntil: "networkidle", timeout: 60000 });
-                                        await page.waitForTimeout(5000); // let JS/charts fully render
-
-                                    // Full-page screenshot as base64
-                                    const screenshotBuffer = await page.screenshot({ fullPage: true });
-                                        screenshots[tabName] = screenshotBuffer.toString("base64");
-                                        console.log(`    ✅ ${tabName} captured (${Math.round(screenshotBuffer.length / 1024)} KB)`);
-                    } catch (err) {
-                                        console.warn(`    ⚠️  Could not capture ${tabName}: ${err.message}`);
-                    } finally {
-                                        await page.close();
-                    }
-                }
-    } finally {
-                await browser.close();
+  try {
+    for (const [name, tabUrl] of Object.entries(tabs)) {
+      console.log("  📸 Capturing:", name, "→", tabUrl);
+      const page = await browser.newPage();
+      await page.setViewportSize({ width: 1440, height: 900 });
+      try {
+        await page.goto(tabUrl, { waitUntil: "networkidle", timeout: 60000 });
+        await page.waitForTimeout(5000);
+        const buf = await page.screenshot({ fullPage: true });
+        screenshots[name] = buf.toString("base64");
+        console.log("    ✅", name, "—", Math.round(buf.length / 1024), "KB");
+      } catch (e) {
+        console.warn("    ⚠️  Could not capture", name, ":", e.message);
+      } finally {
+        await page.close();
+      }
     }
+  } finally {
+    await browser.close();
+  }
 
-    if (!screenshots.overview) {
-                throw new Error("Failed to capture the overview screenshot — cannot continue.");
-    }
-
-    // ─── Build the vision message for Claude ─────────────────────────────────────
-    console.log("  Sending screenshots to Claude Vision API...");
-
-    // Each captured tab becomes an image block
-    const imageBlocks = Object.entries(screenshots).map(([tabName, b64]) => ([
-        {
-                        type: "text",
-                        text: `## Atlas report tab: ${tabName}\nExtract all data visible in the screenshot below.`,
-        },
-        {
-                        type: "image",
-                        source: { type: "base64", media_type: "image/png", data: b64 },
-        },
-            ])).flat();
-
-    const systemPrompt = `You are a data extraction expert. You will receive screenshots of an Atlas GEO audit report (multiple tabs). Extract every number and label you can see and return ONLY valid JSON — no markdown, no explanation.`;
-
-    const userPrompt = `Extract all data from the Atlas report screenshots and return this exact JSON shape (fill in every field from what you see):
-
-    {
-      "brandName": "exact brand name",
-        "domain": "domain.com",
-          "leaderboard": [
-              {"rank": 1, "name": "Brand Name", "mentions": 123}
-                ],
-                  "competitorMentions": [
-                      {"name": "Brand Name", "percentage": 17, "mentions": 65}
-                        ],
-                          "platforms": [
-                              {"name": "ChatGPT", "mentions": 10, "citations": 5, "brandVisibility": 3, "domainCoverage": 1},
-                                  {"name": "Google AI Overview", "mentions": 12, "citations": 21, "brandVisibility": 4, "domainCoverage": 6},
-                                      {"name": "Perplexity", "mentions": 6, "citations": 7, "brandVisibility": 2, "domainCoverage": 2}
-                                        ],
-                                          "totalMentions": 123,
-                                            "totalCitations": 45,
-                                              "avgBrandCoverage": "9.3%",
-                                                "avgDomainCoverage": "9.0%"
-                                                }
-
-                                                Rules:
-                                                - Read every number directly from the screenshots — do NOT guess or hallucinate.
-                                                - Extract ALL competitor rows visible (up to 10).
-                                                - Extract ALL leaderboard entries visible (usually top 3).
-                                                - Extract ALL platform rows visible in the Platforms tab.
-                                                - brandVisibility and domainCoverage are percentages — store as integers (e.g. 9 for 9%).
-                                                - Return ONLY the JSON object, nothing else.`;
-
-    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: {
-                                "Content-Type": "application/json",
-                                "x-api-key": process.env.ANTHROPIC_API_KEY || "",
-                                "anthropic-version": "2023-06-01",
-                },
-                body: JSON.stringify({
-                                model: "claude-opus-4-5",
-                                max_tokens: 4096,
-                                system: systemPrompt,
-                                messages: [
-                                    {
-                                                            role: "user",
-                                                            content: [
-                                                                                        ...imageBlocks,
-                                                                { type: "text", text: userPrompt },
-                                                                                    ],
-                                    },
-                                                ],
-                }),
-    });
-
-    if (!claudeResponse.ok) {
-                const errText = await claudeResponse.text();
-                throw new Error(`Claude API error: ${claudeResponse.status} - ${errText}`);
-    }
-
-    const claudeData = await claudeResponse.json();
-        const responseText = claudeData.content[0].text.trim();
-
-    // Parse JSON — handle accidental markdown fences
-    let data;
-        try {
-                    data = JSON.parse(responseText);
-        } catch {
-                    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                                    data = JSON.parse(jsonMatch[0]);
-                    } else {
-                                    throw new Error("Could not parse Claude response as JSON");
-                    }
-        }
-
-    console.log(`  Brand: ${data.brandName}`);
-        console.log(`  Leaderboard: ${data.leaderboard?.length} entries`);
-        console.log(`  Competitors: ${data.competitorMentions?.length} entries`);
-        console.log(`  Platforms: ${data.platforms?.length} entries`);
-        console.log(`  Total mentions: ${data.totalMentions}`);
-
-    return data;
+  if (!screenshots.overview) throw new Error("Overview screenshot failed — aborting.");
+  return screenshots;
 }
 
-// ─── Data normalizer ─────────────────────────────────────────────────────────────
+// ─── STEP 2: Extract — send screenshots to Claude, get structured JSON data ───
+async function extractData(screenshots) {
+  console.log("  🤖 Sending screenshots to Claude Vision API...");
+
+  const imageBlocks = Object.entries(screenshots).flatMap(([name, b64]) => [
+    { type: "text", text: `## Tab: ${name}` },
+    { type: "image", source: { type: "base64", media_type: "image/png", data: b64 } },
+  ]);
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY || "",
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-opus-4-5",
+      max_tokens: 8192,
+      system: "You are a precise data extraction expert. Extract every number, label, and data point visible in the Atlas GEO audit report screenshots. Return ONLY valid JSON, no markdown, no explanation.",
+      messages: [{
+        role: "user",
+        content: [
+          ...imageBlocks,
+          { type: "text", text: `Extract ALL data from these Atlas report tab screenshots into this exact JSON structure. Read numbers directly from the UI — never guess.
+
+{
+  "brandName": "NESTLE",
+  "domain": "nestleprofessional.in",
+  "totalMentions": 28,
+  "totalCitations": 33,
+  "avgBrandCoverage": "9.3%",
+  "avgDomainCoverage": "9.0%",
+
+  "leaderboard": [
+    { "rank": 1, "name": "WMF", "mentions": 33 },
+    { "rank": 2, "name": "NESTLE", "mentions": 28 },
+    { "rank": 3, "name": "Jura", "mentions": 21 }
+  ],
+
+  "competitorMentions": [
+    { "name": "WMF", "percentage": 11, "mentions": 33 },
+    { "name": "NESTLE", "percentage": 9, "mentions": 28 }
+  ],
+
+  "platforms": [
+    { "name": "ChatGPT", "mentions": 10, "citations": 5, "brandVisibility": 3, "domainCoverage": 1 },
+    { "name": "Google AI Overview", "mentions": 12, "citations": 21, "brandVisibility": 4, "domainCoverage": 6 },
+    { "name": "Perplexity", "mentions": 6, "citations": 7, "brandVisibility": 2, "domainCoverage": 2 }
+  ],
+
+  "promptThemes": [
+    { "theme": "24/7 Operations Efficiency & Compliance Management", "promptCount": 7, "prompts": ["best grab and go beverage solutions", "FSSAI compliant beverage vending solutions"] },
+    { "theme": "Beverage Quality Consistency & Menu Diversification", "promptCount": 8, "prompts": ["80 beverage options single machine"] }
+  ],
+
+  "competitorVisibilityMatrix": [
+    { "theme": "24/7 Operations Efficiency", "brandVisibility": 7, "competitors": { "WMF": 0, "Jura": 0, "Kaapi Machines": 0, "Franke": 3 } }
+  ],
+
+  "domainCitations": [
+    { "domain": "www.reddit.com", "domainCoverage": "14%", "uniquePagesCited": 72, "domainShare": "3%" }
+  ],
+
+  "brandPages": [
+    { "name": "Page title or URL", "prompts": 5 }
+  ]
+}
+
+Rules:
+- Extract ALL rows from every table visible (competitors, platforms, domains, brand pages, themes).
+- promptThemes: extract theme name, how many prompts it has, and list all prompt text visible.
+- competitorVisibilityMatrix: each row is a theme with brand % and each competitor's %.
+- Return ONLY the JSON.` }
+        ],
+      }],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Claude API error: ${res.status} — ${await res.text()}`);
+  const json = await res.json();
+  const text = json.content[0].text.trim();
+
+  let data;
+  try { data = JSON.parse(text); }
+  catch {
+    const m = text.match(/\{[\s\S]*\}/);
+    if (m) data = JSON.parse(m[0]);
+    else throw new Error("Could not parse Claude JSON response");
+  }
+
+  console.log("  Brand:", data.brandName);
+  console.log("  Leaderboard:", data.leaderboard?.length, "entries");
+  console.log("  Competitors:", data.competitorMentions?.length, "entries");
+  console.log("  Platforms:", data.platforms?.length, "entries");
+  console.log("  Themes:", data.promptThemes?.length, "themes");
+  console.log("  Total mentions:", data.totalMentions);
+  return data;
+}
+
+// ─── STEP 3: Normalize — fill defaults so PPTX builder never crashes ──────────
 function normalizeData(raw) {
-        console.log("\n📊 Normalizing data for PPTX generation...");
+  console.log("\n📊 Normalizing extracted data...");
+  const tm = raw.totalMentions || 0;
+  const tc = raw.totalCitations || 0;
 
-    const totalMentions = raw.totalMentions || raw.leaderboard?.[0]?.mentions || 1000;
+  const platforms = raw.platforms?.length > 0 ? raw.platforms : [
+    { name: "ChatGPT",           mentions: 0, citations: 0, brandVisibility: 0, domainCoverage: 0 },
+    { name: "Google AI Overview",mentions: 0, citations: 0, brandVisibility: 0, domainCoverage: 0 },
+    { name: "Perplexity",        mentions: 0, citations: 0, brandVisibility: 0, domainCoverage: 0 },
+  ];
 
-    const leaderboard =
-                raw.leaderboard?.length >= 1
-                ? raw.leaderboard
-                    : [{ rank: 1, name: raw.brandName, mentions: totalMentions }];
+  const leaderboard = raw.leaderboard?.length > 0 ? raw.leaderboard
+    : [{ rank: 1, name: raw.brandName, mentions: tm }];
 
-    const competitorMentions =
-                raw.competitorMentions?.length > 0
-                ? raw.competitorMentions
-                    : leaderboard.map((b, i) => ({
-                                          name: b.name,
-                                          percentage: Math.max(60 - i * 10, 5),
-                                          mentions: b.mentions,
-                    }));
+  const competitorMentions = raw.competitorMentions?.length > 0 ? raw.competitorMentions
+    : leaderboard.map((b, i) => ({ name: b.name, percentage: Math.max(30 - i * 8, 2), mentions: b.mentions }));
 
-    const platforms =
-                raw.platforms?.length > 0
-                ? raw.platforms
-                    : [
-                        { name: "ChatGPT",           mentions: 0, citations: 0, brandVisibility: 0, domainCoverage: 0 },
-                        { name: "Gemini",             mentions: 0, citations: 0, brandVisibility: 0, domainCoverage: 0 },
-                        { name: "Google AI Overview", mentions: totalMentions, citations: raw.totalCitations || 0, brandVisibility: 50, domainCoverage: 20 },
-                        { name: "Perplexity",         mentions: 0, citations: 0, brandVisibility: 0, domainCoverage: 0 },
-                                      ];
+  const promptThemes = raw.promptThemes?.length > 0 ? raw.promptThemes : [];
+  const domainCitations = raw.domainCitations?.length > 0 ? raw.domainCitations : [];
+  const brandPages = raw.brandPages?.length > 0 ? raw.brandPages : [];
+  const competitorVisibilityMatrix = raw.competitorVisibilityMatrix?.length > 0 ? raw.competitorVisibilityMatrix : [];
 
-    const isLeader = leaderboard[0]?.name === raw.brandName;
+  const isLeader = leaderboard[0]?.name === raw.brandName;
+  const leaderboardRank = isLeader ? "#1"
+    : "#" + (leaderboard.findIndex(b => b.name === raw.brandName) + 1 || leaderboard.length);
 
-    return {
-                brandName: raw.brandName,
-                domain: raw.domain || `${raw.brandName.toLowerCase().replace(/\s+/g, "")}.com`,
-                overview: {
-                                totalMentions,
-                                avgBrandCoverage: raw.avgBrandCoverage || "16.6%",
-                                avgDomainCoverage: raw.avgDomainCoverage || "9.0%",
-                                totalCitations: raw.totalCitations || Math.round(totalMentions * 0.37),
-                                platforms: platforms.length,
-                                leaderboardRank: isLeader ? "#1" : `#${leaderboard.findIndex((b) => b.name === raw.brandName) + 1 || 1}`,
-                },
-                leaderboard: leaderboard.slice(0, 3),
-                competitorMentions: competitorMentions.slice(0, 10),
-                platformData: {
-                                totalMentions,
-                                totalCitations: raw.totalCitations || 0,
-                                avgBrandCoverage: raw.avgBrandCoverage || "16.6%",
-                                avgDomainCoverage: raw.avgDomainCoverage || "9.0%",
-                                platforms,
-                },
-                brandVisibilityByPlatform: [],
-                competitorVisibilityMatrix: {
-                                brands: leaderboard.slice(0, 6).map((b) => b.name),
-                                rows: [],
-                },
-                domainAuthority: [],
-                brandPages: [
-                    { name: `${raw.brandName} - Official Website`, prompts: 15 },
-                    { name: `${raw.brandName} Product Information`, prompts: 8 },
-                    { name: `About ${raw.brandName}`, prompts: 5 },
-                            ],
-                promptThemes: [
-                    { theme: "General Brand Queries", prompts: ["sample prompt 1", "sample prompt 2", "sample prompt 3"] },
-                    { theme: "Product Information", prompts: ["sample prompt 4", "sample prompt 5"] },
-                            ],
-                keyInsights: buildInsights(raw.brandName, leaderboard, platforms, competitorMentions, totalMentions),
-    };
+  return {
+    brandName: raw.brandName || "Brand",
+    domain: raw.domain || raw.brandName?.toLowerCase().replace(/\s+/g, "") + ".com",
+    totalMentions: tm,
+    totalCitations: tc,
+    avgBrandCoverage: raw.avgBrandCoverage || "0%",
+    avgDomainCoverage: raw.avgDomainCoverage || "0%",
+    leaderboardRank,
+    platformCount: platforms.length,
+    leaderboard: leaderboard.slice(0, 3),
+    competitorMentions: competitorMentions.slice(0, 10),
+    platforms,
+    promptThemes,
+    domainCitations: domainCitations.slice(0, 10),
+    brandPages: brandPages.slice(0, 8),
+    competitorVisibilityMatrix,
+  };
 }
 
-function buildInsights(brandName, leaderboard, platforms, competitors, totalMentions) {
-        const rank1 = leaderboard[0];
-        const isLeader = rank1?.name === brandName;
-        const weakestPlatform = [...platforms].sort((a, b) => a.brandVisibility - b.brandVisibility)[0];
-        const topComp = competitors.find((c) => c.name !== brandName && c.percentage > 0);
 
-    return [
-        {
-                        label: "AI Leaderboard Position",
-                        stat: isLeader ? `#1 of ${leaderboard.length + 3} Brands` : `#${leaderboard.findIndex((b) => b.name === brandName) + 1}`,
-                        description: isLeader
-                            ? `${brandName} leads with ${totalMentions.toLocaleString()} mentions across all AI platforms.`
-                                            : `${brandName} is ranked below ${rank1?.name} in AI visibility. There's ground to make up.`,
-        },
-        {
-                        label: "Total Brand Mentions",
-                        stat: totalMentions.toLocaleString(),
-                        description: `Across all AI platforms tracked — ChatGPT, Gemini, Google AI Overview, and Perplexity.`,
-        },
-        {
-                        label: "Biggest Gap",
-                        stat: weakestPlatform ? `${weakestPlatform.name}` : "Gemini",
-                        description: `${weakestPlatform?.name || "Gemini"} shows the lowest brand visibility at ${weakestPlatform?.brandVisibility || 1}%. A major untapped channel.`,
-        },
-        {
-                        label: "Top Competitor",
-                        stat: topComp ? topComp.name : "—",
-                        description: topComp
-                            ? `${topComp.name} has ${topComp.percentage}% share of AI mentions (${topComp.mentions.toLocaleString()} mentions). Watch this space.`
-                                            : "Monitor competitor AI visibility closely.",
-        },
-            ];
+// ─── PPTX helpers ─────────────────────────────────────────────────────────────
+function hdr(s, pres, title, brand) {
+  // Cyan top accent bar
+  s.addShape(pres.shapes.RECTANGLE, { x:0, y:0, w:10, h:0.08, fill:{color:C.teal}, line:{color:C.teal} });
+  // Logo area
+  s.addText("atlas", { x:0.3, y:0.12, w:0.9, h:0.3, fontSize:11, bold:true, color:C.navy, fontFace:"Calibri" });
+  s.addText("by pepper.inc", { x:1.2, y:0.17, w:1.3, h:0.22, fontSize:7, color:C.slate, fontFace:"Calibri" });
+  // Brand pill top-right
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:8.2, y:0.1, w:1.6, h:0.28, fill:{color:C.lightgray}, line:{color:C.lightgray}, rectRadius:0.05 });
+  s.addText(brand.toUpperCase(), { x:8.2, y:0.1, w:1.6, h:0.28, fontSize:7, bold:true, color:C.navy, align:"center", valign:"middle", fontFace:"Calibri" });
+  // Slide title
+  s.addText(title, { x:0.3, y:0.5, w:9.4, h:0.48, fontSize:18, bold:true, color:C.navy, fontFace:"Calibri" });
+  // Thin underline
+  s.addShape(pres.shapes.RECTANGLE, { x:0.3, y:0.95, w:1.8, h:0.03, fill:{color:C.teal}, line:{color:C.teal} });
 }
 
-// ─── PPTX builder ────────────────────────────────────────────────────────────────
-function addSlideHeader(slide, pres, title, subtitle) {
-        slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: C.navy }, line: { color: C.navy } });
-        slide.addText("atlas", { x: 0.3, y: 0.09, w: 1.2, h: 0.36, fontSize: 14, bold: true, color: C.orange, fontFace: "Calibri", margin: 0 });
-        slide.addText("by pepper.inc", { x: 1.48, y: 0.14, w: 1.5, h: 0.27, fontSize: 8, color: C.lilac, fontFace: "Calibri", margin: 0 });
-        if (subtitle) {
-                    slide.addText(subtitle.toUpperCase(), { x: 0, y: 0.1, w: 9.7, h: 0.34, fontSize: 8, color: C.lilac, fontFace: "Calibri", align: "right", charSpacing: 2, margin: 0 });
-        }
-        slide.addText(title, { x: 0.3, y: 0.7, w: 9.4, h: 0.5, fontSize: 20, bold: true, color: C.navy, fontFace: "Calibri", margin: 0 });
+function ftr(s, pres, brand, domain) {
+  s.addShape(pres.shapes.RECTANGLE, { x:0, y:5.42, w:10, h:0.2, fill:{color:C.navy}, line:{color:C.navy} });
+  s.addText(brand + " · " + domain + " · GEO Audit by Atlas / Pepper.inc", {
+    x:0.3, y:5.43, w:9.4, h:0.18, fontSize:6.5, color:"AAAACC", fontFace:"Calibri"
+  });
 }
 
-function addFooter(slide, pres, brandName, domain) {
-        slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 5.4, w: 10, h: 0.225, fill: { color: C.lightgray }, line: { color: C.lightgray } });
-        slide.addText(`${brandName} · ${domain} · GEO Audit by Atlas`, { x: 0.3, y: 5.41, w: 9.4, h: 0.2, fontSize: 7, color: C.slate, fontFace: "Calibri", margin: 0 });
+// ─── SLIDE 1: Cover ───────────────────────────────────────────────────────────
+function buildSlide1(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.navy };
+  // Decorative circles
+  s.addShape(pres.shapes.OVAL, { x:7.5, y:-0.5, w:3.5, h:3.5, fill:{color:"2D2B55"}, line:{color:"2D2B55"} });
+  s.addShape(pres.shapes.OVAL, { x:8.2, y:0.2, w:2.0, h:2.0, fill:{color:C.purple}, line:{color:C.purple} });
+  // Logo
+  s.addText("atlas", { x:0.5, y:0.4, w:1.0, h:0.38, fontSize:15, bold:true, color:C.orange, fontFace:"Calibri" });
+  s.addText("by pepper.inc", { x:1.52, y:0.46, w:1.4, h:0.26, fontSize:8, color:C.lilac, fontFace:"Calibri" });
+  // Tag
+  s.addText("GEO AUDIT REPORT", { x:0.5, y:1.05, w:6, h:0.28, fontSize:9, color:C.orange, bold:true, charSpacing:4, fontFace:"Calibri" });
+  // Brand name
+  s.addText(d.brandName, { x:0.5, y:1.35, w:7, h:1.2, fontSize:50, bold:true, color:C.white, fontFace:"Calibri" });
+  s.addText(d.domain, { x:0.5, y:2.58, w:5, h:0.38, fontSize:13, color:C.lilac, fontFace:"Calibri" });
+  s.addShape(pres.shapes.RECTANGLE, { x:0.5, y:3.0, w:1.2, h:0.04, fill:{color:C.orange}, line:{color:C.orange} });
+  // KPI strip
+  const kpis = [
+    { v: String(d.totalMentions), l: "Total Mentions" },
+    { v: d.avgBrandCoverage, l: "Brand Coverage" },
+    { v: String(d.platformCount), l: "AI Platforms" },
+    { v: d.leaderboardRank, l: "Leaderboard" },
+  ];
+  kpis.forEach((k, i) => {
+    const x = 0.5 + i * 2.3;
+    s.addText(k.v, { x, y:3.15, w:2.1, h:0.52, fontSize:24, bold:true, color:C.orange, fontFace:"Calibri" });
+    s.addText(k.l, { x, y:3.65, w:2.1, h:0.22, fontSize:8, color:C.lilac, fontFace:"Calibri" });
+  });
+  s.addText("Powered by atlas · pepper.inc", { x:0.5, y:5.15, w:9, h:0.22, fontSize:7.5, color:C.slate, fontFace:"Calibri" });
 }
 
+// ─── SLIDE 2: Prompts & Themes overview — 3-col grid ─────────────────────────
+function buildSlide2(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.white };
+  hdr(s, pres, `We Have Mapped ${d.promptThemes.reduce((a,t)=>a+(t.promptCount||t.prompts?.length||0),0)} Prompts Across ${d.promptThemes.length} Themes`, d.brandName);
+  ftr(s, pres, d.brandName, d.domain);
+
+  const themes = d.promptThemes.slice(0, 9);
+  const cols = 3;
+  const colW = 3.0, colGap = 0.15, rowH = 0.72, rowGap = 0.1;
+  const startX = 0.28, startY = 1.1;
+
+  themes.forEach((t, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = startX + col * (colW + colGap);
+    const y = startY + row * (rowH + rowGap);
+    const count = t.promptCount || t.prompts?.length || 0;
+
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w:colW, h:rowH, fill:{color:C.offwhite}, line:{color:C.lightgray}, shadow:makeShadow() });
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w:0.04, h:rowH, fill:{color:C.teal}, line:{color:C.teal} });
+    s.addText(t.theme, { x:x+0.1, y:y+0.08, w:colW-0.15, h:0.34, fontSize:9.5, bold:true, color:C.navy, fontFace:"Calibri", wrap:true });
+    s.addText(count + " prompts", { x:x+0.1, y:y+0.46, w:colW-0.15, h:0.2, fontSize:8.5, color:C.slate, fontFace:"Calibri" });
+  });
+
+  // Yellow CTA bar
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:2.8, y:4.78, w:4.4, h:0.36, fill:{color:C.yellow}, line:{color:C.yellow}, rectRadius:0.05 });
+  s.addText("Link to the entire list of prompts", { x:2.8, y:4.78, w:4.4, h:0.36, fontSize:10, bold:true, color:C.navy, align:"center", valign:"middle", fontFace:"Calibri" });
+  s.addText("This is a relevant set of non-branded prompts for your brand.", {
+    x:0.3, y:5.16, w:9.4, h:0.2, fontSize:7.5, color:C.slate, italic:true, align:"center", fontFace:"Calibri"
+  });
+}
+
+
+// ─── SLIDE 3: Brand Leaderboard + Competitor Mentions ────────────────────────
+function buildSlide3(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.white };
+  hdr(s, pres, "Brand Leaderboard & Competitor Mentions", d.brandName);
+  ftr(s, pres, d.brandName, d.domain);
+
+  // LEFT: Leaderboard podium
+  const brands = d.leaderboard;
+  if (brands.length > 0) {
+    const maxM = Math.max(...brands.map(b => b.mentions), 1);
+    const barW = 1.0, gap = 0.55;
+    const startX = 0.3, chartBottom = 4.65, chartH = 2.6;
+
+    brands.forEach((brand, i) => {
+      const x = startX + i * (barW + gap);
+      const barH = Math.max((brand.mentions / maxM) * chartH, 0.15);
+      const barY = chartBottom - barH;
+      const isB = brand.name === d.brandName;
+      const col = isB ? C.orange : (i === 0 ? C.teal : "BDBDCD");
+
+      s.addText(brand.name, { x:x-0.1, y:barY-0.38, w:barW+0.2, h:0.3, fontSize:8, bold:isB, color:isB?C.orange:C.navy, align:"center", fontFace:"Calibri" });
+      s.addShape(pres.shapes.OVAL, { x:x+barW/2-0.22, y:barY-0.62, w:0.44, h:0.44, fill:{color:C.white}, line:{color:C.lightgray} });
+      s.addText("#"+brand.rank, { x:x+barW/2-0.22, y:barY-0.62, w:0.44, h:0.44, fontSize:11, bold:true, color:C.navy, align:"center", valign:"middle", fontFace:"Calibri" });
+      s.addShape(pres.shapes.RECTANGLE, { x, y:barY, w:barW, h:barH, fill:{color:col}, line:{color:col}, shadow:makeShadow() });
+      s.addText(brand.mentions+" mentions", { x:x-0.1, y:chartBottom+0.06, w:barW+0.2, h:0.2, fontSize:7.5, color:C.slate, align:"center", fontFace:"Calibri" });
+      if (isB) s.addText("👑", { x:x+barW/2-0.24, y:barY+0.06, w:0.48, h:0.35, fontSize:18, align:"center" });
+    });
+    s.addText("Brand Leaderboard", { x:0.3, y:1.1, w:4.5, h:0.25, fontSize:9, bold:true, color:C.slate, fontFace:"Calibri" });
+  }
+
+  // RIGHT: Competitor mentions bar chart
+  const comps = d.competitorMentions.slice(0, 10);
+  const maxPct = Math.max(...comps.map(c => c.percentage), 1);
+  const rowH = 0.33, startY = 1.1, barMaxW = 3.5;
+  s.addText("Competitor Mentions vs. " + d.brandName, { x:5.0, y:1.1, w:4.7, h:0.25, fontSize:9, bold:true, color:C.slate, fontFace:"Calibri" });
+
+  comps.forEach((comp, i) => {
+    const y = startY + 0.32 + i * rowH;
+    const isB = comp.name === d.brandName;
+    s.addShape(pres.shapes.OVAL, { x:5.0, y:y+0.04, w:0.22, h:0.22, fill:{color:isB?C.purple:C.lightgray}, line:{color:isB?C.purple:C.lightgray} });
+    s.addText(comp.name[0].toUpperCase(), { x:5.0, y:y+0.04, w:0.22, h:0.22, fontSize:7, bold:true, color:isB?C.white:C.navy, align:"center", valign:"middle", fontFace:"Calibri" });
+    s.addText(comp.name, { x:5.26, y:y+0.05, w:1.4, h:0.2, fontSize:8, bold:isB, color:isB?C.purple:C.navy, fontFace:"Calibri" });
+    const bw = (comp.percentage / maxPct) * barMaxW;
+    s.addShape(pres.shapes.RECTANGLE, { x:6.7, y:y+0.06, w:Math.max(bw,0.05), h:0.18, fill:{color:isB?C.navy:C.lightgray}, line:{color:isB?C.navy:C.lightgray} });
+    s.addText(comp.percentage+"% · "+comp.mentions+" mentions", { x:6.72+bw, y:y+0.05, w:2.5, h:0.2, fontSize:7.5, color:C.slate, fontFace:"Calibri" });
+  });
+
+  // Divider
+  s.addShape(pres.shapes.RECTANGLE, { x:4.75, y:1.05, w:0.03, h:3.8, fill:{color:C.lightgray}, line:{color:C.lightgray} });
+}
+
+// ─── SLIDE 4: Domains vs Brand + Brand Pages ──────────────────────────────────
+function buildSlide4(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.white };
+  hdr(s, pres, "Top Cited Sources (Category vs Us)", d.brandName);
+  ftr(s, pres, d.brandName, d.domain);
+
+  // LEFT: Domain citations table
+  const domains = d.domainCitations.slice(0, 9);
+  s.addShape(pres.shapes.RECTANGLE, { x:0.25, y:1.08, w:4.4, h:0.28, fill:{color:C.navy}, line:{color:C.navy} });
+  ["Domain","Pages","Responses"].forEach((h, i) => {
+    const xs = [0.35, 2.8, 3.65];
+    s.addText(h, { x:xs[i], y:1.1, w:1.1, h:0.24, fontSize:8, bold:true, color:C.white, fontFace:"Calibri" });
+  });
+
+  domains.forEach((row, i) => {
+    const y = 1.38 + i * 0.34;
+    const bg = i % 2 === 0 ? C.offwhite : C.white;
+    s.addShape(pres.shapes.RECTANGLE, { x:0.25, y, w:4.4, h:0.32, fill:{color:bg}, line:{color:C.lightgray} });
+    s.addText(row.domain, { x:0.35, y:y+0.06, w:2.4, h:0.22, fontSize:8, color:C.navy, fontFace:"Calibri" });
+    const pages = row.uniquePagesCited || row.pages || "";
+    const responses = row.domainShare || row.responses || "";
+    s.addText(String(pages), { x:2.82, y:y+0.06, w:0.6, h:0.22, fontSize:8, color:C.slate, fontFace:"Calibri" });
+    s.addText(String(responses), { x:3.67, y:y+0.06, w:0.9, h:0.22, fontSize:8, color:C.slate, fontFace:"Calibri" });
+  });
+
+  // RIGHT: Brand pages
+  const pages = d.brandPages.slice(0, 6);
+  s.addText("Sources from " + d.brandName + " Domain", { x:5.0, y:1.08, w:4.7, h:0.28, fontSize:9, bold:true, color:C.navy, fontFace:"Calibri" });
+  s.addShape(pres.shapes.RECTANGLE, { x:5.0, y:1.36, w:4.7, h:0.02, fill:{color:C.lightgray}, line:{color:C.lightgray} });
+
+  pages.forEach((pg, i) => {
+    const y = 1.42 + i * 0.5;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:5.05, y, w:4.6, h:0.44, fill:{color:C.offwhite}, line:{color:C.lightgray}, rectRadius:0.04, shadow:makeShadow() });
+    s.addText(pg.name, { x:5.15, y:y+0.04, w:3.6, h:0.2, fontSize:8.5, bold:true, color:C.navy, fontFace:"Calibri" });
+    s.addText((pg.prompts||0)+" Response"+(pg.prompts!==1?"s":""), { x:9.1, y:y+0.04, w:0.5, h:0.2, fontSize:7.5, bold:true, color:C.teal, align:"right", fontFace:"Calibri" });
+    s.addText(pg.url || d.domain, { x:5.15, y:y+0.24, w:4.4, h:0.16, fontSize:7, color:C.slate, fontFace:"Calibri" });
+  });
+
+  // Yellow CTA
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:5.0, y:4.75, w:4.7, h:0.34, fill:{color:C.yellow}, line:{color:C.yellow}, rectRadius:0.05 });
+  s.addText("Top Cited Sources from our website ↑", { x:5.0, y:4.75, w:4.7, h:0.34, fontSize:9, bold:true, color:C.navy, align:"center", valign:"middle", fontFace:"Calibri" });
+
+  // Divider
+  s.addShape(pres.shapes.RECTANGLE, { x:4.75, y:1.05, w:0.03, h:3.9, fill:{color:C.lightgray}, line:{color:C.lightgray} });
+}
+
+
+// ─── SLIDE 5: Competitor Visibility Matrix (Theme × Brand heatmap) ────────────
+function buildSlide5(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.white };
+  hdr(s, pres, "Theme Benchmarks (% Visibility across Competitors)", d.brandName);
+  ftr(s, pres, d.brandName, d.domain);
+
+  const matrix = d.competitorVisibilityMatrix;
+  if (matrix.length === 0) {
+    s.addText("No competitor visibility matrix data available.", { x:0.5, y:2.5, w:9, h:0.5, fontSize:12, color:C.slate, align:"center", fontFace:"Calibri" });
+    return;
+  }
+
+  // Collect all competitor names from matrix
+  const compNames = [];
+  matrix.forEach(row => {
+    if (row.competitors) Object.keys(row.competitors).forEach(k => { if (!compNames.includes(k)) compNames.push(k); });
+  });
+  const allCols = [d.brandName, ...compNames.slice(0, 8)];
+
+  const colW = (9.5 / (allCols.length + 1));
+  const themeColW = 1.8;
+  const dataColW = (9.5 - themeColW) / allCols.length;
+  const startX = 0.25, headerY = 1.08, rowH = 0.32;
+
+  // Header row
+  s.addShape(pres.shapes.RECTANGLE, { x:startX, y:headerY, w:9.5, h:rowH, fill:{color:C.navy}, line:{color:C.navy} });
+  s.addText("Topic", { x:startX+0.05, y:headerY+0.05, w:themeColW-0.1, h:rowH-0.1, fontSize:7.5, bold:true, color:C.white, fontFace:"Calibri" });
+  allCols.forEach((col, ci) => {
+    const x = startX + themeColW + ci * dataColW;
+    const isBrand = col === d.brandName;
+    s.addText(col, { x:x+0.02, y:headerY+0.05, w:dataColW-0.04, h:rowH-0.1, fontSize:6.5, bold:isBrand, color:isBrand?C.orange:C.white, align:"center", fontFace:"Calibri", wrap:true });
+  });
+
+  // Data rows
+  matrix.slice(0, 11).forEach((row, ri) => {
+    const y = headerY + rowH + ri * rowH;
+    const bg = ri % 2 === 0 ? C.offwhite : C.white;
+    s.addShape(pres.shapes.RECTANGLE, { x:startX, y, w:9.5, h:rowH, fill:{color:bg}, line:{color:C.lightgray} });
+    s.addText(row.theme || row.name || "", { x:startX+0.05, y:y+0.05, w:themeColW-0.1, h:rowH-0.08, fontSize:6.5, color:C.navy, fontFace:"Calibri", wrap:true });
+
+    allCols.forEach((col, ci) => {
+      const x = startX + themeColW + ci * dataColW;
+      const isBrand = col === d.brandName;
+      let pct = 0;
+      if (isBrand) pct = row.brandVisibility || 0;
+      else pct = row.competitors?.[col] ?? 0;
+
+      // Heat colour
+      let cellCol = bg;
+      if (isBrand && pct > 0) cellCol = C.purple;
+      else if (pct >= 15) cellCol = "8B85D4";
+      else if (pct >= 5) cellCol = "C4C0EA";
+
+      if (cellCol !== bg) s.addShape(pres.shapes.RECTANGLE, { x:x+0.02, y:y+0.04, w:dataColW-0.04, h:rowH-0.08, fill:{color:cellCol}, line:{color:cellCol} });
+      s.addText(pct > 0 ? pct+"%" : "0%", { x:x+0.02, y:y+0.06, w:dataColW-0.04, h:rowH-0.1, fontSize:7, bold:isBrand, color:isBrand&&pct>0?C.white:(pct>=5?C.navy:C.slate), align:"center", fontFace:"Calibri" });
+    });
+  });
+
+  s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.", {
+    x:0.3, y:5.22, w:9.4, h:0.16, fontSize:7, italic:true, color:C.slate, align:"center", fontFace:"Calibri"
+  });
+}
+
+// ─── SLIDE 6: "What does each metric mean?" — static definitions ──────────────
+function buildSlide6(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.white };
+  hdr(s, pres, "What does each of these mean?", d.brandName);
+  ftr(s, pres, d.brandName, d.domain);
+
+  const defs = [
+    { term: "Brand Mentions", body: "Number of times your brand appeared in AI answers out of total tracked prompts" },
+    { term: "Share of Voice",  body: "Percentage of your brand mentions compared to all total brand mentions" },
+    { term: "Brand Position",  body: "Average position of your brand in AI answers" },
+    { term: "Domain Citation", body: "Number of times your website was cited on AI Search Engines" },
+    { term: "Brand Coverage",  body: "Percentage of prompts that mention your brand" },
+    { term: "Domain Coverage", body: "Percentage of prompts that cited your website" },
+  ];
+
+  defs.forEach((def, i) => {
+    const col = i % 3, row = Math.floor(i / 3);
+    const x = 0.28 + col * 3.22, y = 1.2 + row * 1.62;
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w:3.06, h:1.52, fill:{color:C.yellow}, line:{color:"D4AA30"}, shadow:makeShadow() });
+    s.addText(def.term, { x:x+0.14, y:y+0.14, w:2.78, h:0.3, fontSize:12, bold:true, color:C.purple, fontFace:"Calibri" });
+    s.addText("— — — — — — — — — — — —", { x:x+0.14, y:y+0.44, w:2.78, h:0.16, fontSize:7, color:C.purple, fontFace:"Calibri" });
+    s.addText(def.body, { x:x+0.14, y:y+0.6, w:2.78, h:0.78, fontSize:9, color:C.navy, italic:true, bold:true, fontFace:"Calibri", wrap:true });
+  });
+
+  s.addText("Source: Otterly.ai", { x:0.3, y:5.22, w:3, h:0.16, fontSize:7.5, bold:true, color:C.navy, fontFace:"Calibri" });
+}
+
+
+// ─── SLIDE 7: Platform mentions table ────────────────────────────────────────
+function buildSlide7(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.white };
+  hdr(s, pres, d.brandName + " Mentions by AI Platform", d.brandName);
+  ftr(s, pres, d.brandName, d.domain);
+
+  // Top 4 KPI boxes
+  const kpis = [
+    { v: String(d.totalMentions), l: "Total Brand Mentions" },
+    { v: String(d.totalCitations), l: "Total Domain Citations" },
+    { v: d.avgBrandCoverage, l: "Avg Brand Coverage" },
+    { v: d.avgDomainCoverage, l: "Avg Domain Coverage" },
+  ];
+  kpis.forEach((k, i) => {
+    const x = 0.25 + i * 2.42;
+    s.addShape(pres.shapes.RECTANGLE, { x, y:1.08, w:2.3, h:0.72, fill:{color:C.white}, line:{color:C.lightgray}, shadow:makeShadow() });
+    s.addShape(pres.shapes.RECTANGLE, { x, y:1.08, w:2.3, h:0.06, fill:{color:C.teal}, line:{color:C.teal} });
+    s.addText(k.v, { x, y:1.16, w:2.3, h:0.38, fontSize:20, bold:true, color:C.navy, align:"center", fontFace:"Calibri" });
+    s.addText(k.l, { x, y:1.52, w:2.3, h:0.24, fontSize:7.5, color:C.slate, align:"center", fontFace:"Calibri" });
+  });
+
+  // Platform table
+  const cols = ["Platform","Mentions","Citations","Brand Visibility","Domain Coverage"];
+  const colX = [0.25, 2.15, 3.2, 4.3, 7.1];
+  const colW = [1.85, 1.0, 1.05, 2.75, 2.6];
+
+  // Header
+  s.addShape(pres.shapes.RECTANGLE, { x:0.25, y:1.9, w:9.5, h:0.28, fill:{color:C.lightgray}, line:{color:C.lightgray} });
+  cols.forEach((h, i) => s.addText(h, { x:colX[i], y:1.93, w:colW[i], h:0.22, fontSize:7.5, bold:true, color:C.slate, fontFace:"Calibri" }));
+
+  d.platforms.forEach((p, i) => {
+    const y = 2.22 + i * 0.5;
+    const bg = i % 2 === 0 ? "F4F3FD" : C.white;
+    s.addShape(pres.shapes.RECTANGLE, { x:0.25, y:y-0.04, w:9.5, h:0.48, fill:{color:bg}, line:{color:C.lightgray} });
+    s.addText(p.name, { x:colX[0], y, w:colW[0], h:0.28, fontSize:9.5, bold:true, color:C.navy, fontFace:"Calibri" });
+    s.addText(String(p.mentions), { x:colX[1], y, w:colW[1], h:0.28, fontSize:9.5, color:C.navy, fontFace:"Calibri" });
+    s.addText(String(p.citations), { x:colX[2], y, w:colW[2], h:0.28, fontSize:9.5, color:C.navy, fontFace:"Calibri" });
+
+    // Brand visibility progress bar
+    const bvPct = Math.min(p.brandVisibility || 0, 100);
+    const bvW = (bvPct / 100) * 2.5;
+    s.addShape(pres.shapes.RECTANGLE, { x:colX[3], y:y+0.08, w:2.5, h:0.14, fill:{color:C.lightgray}, line:{color:C.lightgray} });
+    if (bvW > 0) s.addShape(pres.shapes.RECTANGLE, { x:colX[3], y:y+0.08, w:bvW, h:0.14, fill:{color:C.navy}, line:{color:C.navy} });
+    s.addText(bvPct+"%", { x:colX[3], y, w:0.45, h:0.28, fontSize:8, bold:true, color:C.navy, fontFace:"Calibri" });
+
+    // Domain coverage progress bar
+    const dcPct = Math.min(p.domainCoverage || 0, 100);
+    const dcW = (dcPct / 100) * 2.5;
+    s.addShape(pres.shapes.RECTANGLE, { x:colX[4], y:y+0.08, w:2.5, h:0.14, fill:{color:C.lightgray}, line:{color:C.lightgray} });
+    if (dcW > 0) s.addShape(pres.shapes.RECTANGLE, { x:colX[4], y:y+0.08, w:dcW, h:0.14, fill:{color:C.violet}, line:{color:C.violet} });
+    s.addText(dcPct+"%", { x:colX[4], y, w:0.45, h:0.28, fontSize:8, bold:true, color:C.violet, fontFace:"Calibri" });
+  });
+}
+
+// ─── SLIDE 8: Brand Visibility by Platform (theme × platform heatmap) ─────────
+function buildSlide8(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.white };
+  hdr(s, pres, d.brandName + " Brand Visibility by Platform & Theme", d.brandName);
+  ftr(s, pres, d.brandName, d.domain);
+
+  const platNames = d.platforms.map(p => p.name);
+
+  if (d.competitorVisibilityMatrix.length === 0 || platNames.length === 0) {
+    // Fallback: simple platform bar chart
+    const maxM = Math.max(...d.platforms.map(p => p.brandVisibility || 0), 1);
+    d.platforms.forEach((p, i) => {
+      const y = 1.3 + i * 0.72;
+      const bw = Math.max(((p.brandVisibility||0) / maxM) * 7.0, 0.05);
+      s.addText(p.name, { x:0.3, y:y+0.08, w:2.2, h:0.28, fontSize:10, bold:true, color:C.navy, fontFace:"Calibri" });
+      s.addShape(pres.shapes.RECTANGLE, { x:2.6, y:y+0.1, w:bw, h:0.22, fill:{color:C.purple}, line:{color:C.purple} });
+      s.addText((p.brandVisibility||0)+"%", { x:2.65+bw, y:y+0.08, w:0.6, h:0.28, fontSize:9, bold:true, color:C.purple, fontFace:"Calibri" });
+    });
+    return;
+  }
+
+  // Theme × Platform heatmap sourced from competitorVisibilityMatrix brand column
+  const themes = d.competitorVisibilityMatrix.slice(0, 10);
+  const themeColW = 2.8, dataColW = (9.5 - themeColW) / platNames.length;
+  const startX = 0.25, headerY = 1.08, rowH = 0.36;
+
+  s.addShape(pres.shapes.RECTANGLE, { x:startX, y:headerY, w:9.5, h:rowH, fill:{color:C.navy}, line:{color:C.navy} });
+  s.addText("Themes", { x:startX+0.08, y:headerY+0.07, w:themeColW, h:rowH-0.1, fontSize:7.5, bold:true, color:C.white, fontFace:"Calibri" });
+  platNames.forEach((pn, pi) => {
+    const x = startX + themeColW + pi * dataColW;
+    s.addText(pn, { x:x+0.03, y:headerY+0.05, w:dataColW-0.06, h:rowH-0.1, fontSize:7, bold:true, color:C.white, align:"center", fontFace:"Calibri", wrap:true });
+  });
+
+  themes.forEach((row, ri) => {
+    const y = headerY + rowH + ri * rowH;
+    const bg = ri % 2 === 0 ? C.offwhite : C.white;
+    s.addShape(pres.shapes.RECTANGLE, { x:startX, y, w:9.5, h:rowH, fill:{color:bg}, line:{color:C.lightgray} });
+    s.addText(row.theme || "", { x:startX+0.08, y:y+0.06, w:themeColW-0.12, h:rowH-0.1, fontSize:7, color:C.navy, fontFace:"Calibri", wrap:true });
+
+    platNames.forEach((pn, pi) => {
+      const x = startX + themeColW + pi * dataColW;
+      // Use platform-specific visibility from row if available, else fall back to brand visibility
+      const platVal = row.platformVisibility?.[pn] ?? row.brandVisibility ?? 0;
+      let cellCol = bg;
+      if (platVal >= 15) cellCol = C.purple;
+      else if (platVal >= 5) cellCol = "C4C0EA";
+      if (cellCol !== bg) s.addShape(pres.shapes.RECTANGLE, { x:x+0.03, y:y+0.05, w:dataColW-0.06, h:rowH-0.1, fill:{color:cellCol}, line:{color:cellCol} });
+      s.addText(platVal > 0 ? platVal+"%" : "0%", { x:x+0.03, y:y+0.07, w:dataColW-0.06, h:rowH-0.12, fontSize:7.5, color:platVal>=5?C.white:C.slate, align:"center", fontFace:"Calibri" });
+    });
+  });
+
+  s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.", {
+    x:0.3, y:5.22, w:9.4, h:0.16, fontSize:7, italic:true, color:C.slate, align:"center", fontFace:"Calibri"
+  });
+}
+
+
+// ─── STEP 4: Build the PPTX ───────────────────────────────────────────────────
 function buildPPTX(data, outputPath) {
-        const pres = new pptxgen();
-        pres.layout = "LAYOUT_16x9";
-        pres.title = `${data.brandName} GEO Audit — Atlas`;
-                                                                            pres.author = "Pepper.inc Atlas";
+  const pres = new pptxgen();
+  pres.layout = "LAYOUT_16x9";
+  pres.title = data.brandName + " GEO Audit — Atlas";
+  pres.author = "Pepper.inc Atlas";
 
-    // ── Slide 1: Cover ───────────────────────────────────────────────────────────
-    {
-                const s1 = pres.addSlide();
-                s1.background = { color: C.navy };
-                s1.addShape(pres.shapes.OVAL, { x: 7.2, y: -0.9, w: 4.0, h: 4.0, fill: { color: C.darkgray }, line: { color: C.darkgray } });
-                s1.addShape(pres.shapes.OVAL, { x: 7.9, y: -0.3, w: 2.6, h: 2.6, fill: { color: C.purple }, line: { color: C.purple } });
-                s1.addText("GEO AUDIT REPORT", { x: 0.5, y: 0.9, w: 6.5, h: 0.4, fontSize: 10, color: C.orange, bold: true, fontFace: "Calibri", charSpacing: 4, margin: 0 });
-                s1.addText(data.brandName, { x: 0.5, y: 1.3, w: 8, h: 1.35, fontSize: 52, bold: true, color: C.white, fontFace: "Calibri", margin: 0 });
-                s1.addText(data.domain, { x: 0.5, y: 2.65, w: 5, h: 0.5, fontSize: 14, color: C.lilac, fontFace: "Calibri", margin: 0 });
-                s1.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 3.15, w: 1.5, h: 0.04, fill: { color: C.orange }, line: { color: C.orange } });
-                [
-                    { label: "Total Mentions",    value: data.overview.totalMentions.toLocaleString() },
-                    { label: "Brand Coverage",    value: data.overview.avgBrandCoverage },
-                    { label: "AI Platforms",      value: String(data.overview.platforms) },
-                    { label: "Leaderboard Rank",  value: data.overview.leaderboardRank },
-                            ].forEach((st, i) => {
-                                            const x = 0.5 + i * 2.3;
-                                            s1.addText(st.value, { x, y: 3.35, w: 2.1, h: 0.58, fontSize: 26, bold: true, color: C.orange, fontFace: "Calibri", margin: 0 });
-                                            s1.addText(st.label, { x, y: 3.91, w: 2.1, h: 0.28, fontSize: 9, color: C.lilac, fontFace: "Calibri", margin: 0 });
-                            });
-                s1.addText("Powered by atlas · pepper.inc", { x: 0.5, y: 5.1, w: 9, h: 0.28, fontSize: 8, color: C.slate, fontFace: "Calibri", margin: 0 });
-    }
+  buildSlide1(pres, data);   // Cover
+  buildSlide2(pres, data);   // Prompts & Themes grid
+  buildSlide3(pres, data);   // Leaderboard + Competitor mentions
+  buildSlide4(pres, data);   // Domains vs brand + brand pages
+  buildSlide5(pres, data);   // Competitor visibility matrix heatmap
+  buildSlide6(pres, data);   // Metric definitions (static)
+  buildSlide7(pres, data);   // Platform mentions table
+  buildSlide8(pres, data);   // Brand visibility by platform heatmap
 
-    // ── Slide 2: Leaderboard ──────────────────────────────────────────────────────
-    {
-                const s2 = pres.addSlide();
-                s2.background = { color: C.offwhite };
-                addSlideHeader(s2, pres, "Brand Leaderboard", data.brandName);
-                addFooter(s2, pres, data.brandName, data.domain);
-
-            const brands = data.leaderboard;
-                if (brands.length > 0) {
-                                const maxM = Math.max(...brands.map((b) => b.mentions));
-                                const barW = 1.4, gap = 0.9;
-                                const totalW = brands.length * barW + (brands.length - 1) * gap;
-                                const startX = (10 - totalW) / 2;
-                                const chartBottom = 4.85, chartH = chartBottom - 1.9;
-
-                    brands.forEach((brand, i) => {
-                                        const x = startX + i * (barW + gap);
-                                        const barH = Math.max((brand.mentions / maxM) * chartH, 0.1);
-                                        const barY = chartBottom - barH;
-                                        const isC = brand.name === data.brandName;
-                                        const col = isC ? C.orange : i === 1 ? "BDBDCD" : "C0824A";
-
-                                                   s2.addText(brand.name, { x: x - 0.2, y: barY - 0.5, w: barW + 0.4, h: 0.32, fontSize: 12, bold: isC, color: isC ? C.orange : C.navy, align: "center", fontFace: "Calibri", margin: 0 });
-                                        s2.addShape(pres.shapes.OVAL, { x: x + barW / 2 - 0.26, y: barY - 0.78, w: 0.52, h: 0.52, fill: { color: C.white }, line: { color: C.lightgray } });
-                                        s2.addText(`#${brand.rank}`, { x: x + barW / 2 - 0.26, y: barY - 0.78, w: 0.52, h: 0.52, fontSize: 13, bold: true, color: C.navy, align: "center", valign: "middle", fontFace: "Calibri", margin: 0 });
-                                        s2.addShape(pres.shapes.RECTANGLE, { x, y: barY, w: barW, h: barH, fill: { color: col }, line: { color: col }, shadow: makeShadow() });
-                                        s2.addText(`${brand.mentions.toLocaleString()} mentions`, { x: x - 0.15, y: chartBottom + 0.1, w: barW + 0.3, h: 0.25, fontSize: 9, color: C.slate, align: "center", fontFace: "Calibri", margin: 0 });
-                                        if (isC) s2.addText("👑", { x: x + barW / 2 - 0.28, y: barY + 0.08, w: 0.56, h: 0.4, fontSize: 20, align: "center", margin: 0 });
-                    });
-                }
-    }
-
-    // ── Slide 3: Competitor Mentions ──────────────────────────────────────────────
-    {
-                const s3 = pres.addSlide();
-                s3.background = { color: C.offwhite };
-                addSlideHeader(s3, pres, `Competitor Mentions vs. ${data.brandName}`, data.brandName);
-                addFooter(s3, pres, data.brandName, data.domain);
-
-            const comps = data.competitorMentions;
-                const maxPct = Math.max(...comps.map((c) => c.percentage), 1);
-                const rowH = 0.38, startY = 1.35, barMaxW = 6.5;
-
-            comps.forEach((comp, i) => {
-                            const y = startY + i * rowH;
-                            const isC = comp.name === data.brandName;
-                            s3.addShape(pres.shapes.OVAL, { x: 0.25, y: y + 0.04, w: 0.28, h: 0.28, fill: { color: isC ? C.purple : C.lightgray }, line: { color: isC ? C.purple : C.lightgray } });
-                            s3.addText(comp.name[0].toUpperCase(), { x: 0.25, y: y + 0.04, w: 0.28, h: 0.28, fontSize: 9, bold: true, color: isC ? C.white : C.navy, align: "center", valign: "middle", fontFace: "Calibri", margin: 0 });
-                            s3.addText(comp.name, { x: 0.6, y: y + 0.06, w: 1.4, h: 0.25, fontSize: 10, bold: isC, color: isC ? C.purple : C.navy, fontFace: "Calibri", margin: 0 });
-                            const barW = (comp.percentage / maxPct) * barMaxW;
-                            s3.addShape(pres.shapes.RECTANGLE, { x: 2.1, y: y + 0.06, w: Math.max(barW, 0.05), h: 0.25, fill: { color: isC ? C.navy : C.lightgray }, line: { color: isC ? C.navy : C.lightgray } });
-                            s3.addText(`${comp.percentage}%  ${comp.mentions.toLocaleString()} mentions`, { x: 2.15 + barW, y: y + 0.06, w: 2.5, h: 0.25, fontSize: 9, bold: isC, color: isC ? C.navy : C.slate, fontFace: "Calibri", margin: 0 });
-            });
-    }
-
-    // ── Slide 4: AI Platform Breakdown ────────────────────────────────────────────
-    {
-                const s4 = pres.addSlide();
-                s4.background = { color: C.offwhite };
-                addSlideHeader(s4, pres, `${data.brandName} Mentions by AI Platform`, data.brandName);
-                addFooter(s4, pres, data.brandName, data.domain);
-
-            const sumStats = [
-                { label: "Total Brand Mentions",  value: data.platformData.totalMentions.toLocaleString() },
-                { label: "Total Domain Citations", value: data.platformData.totalCitations.toLocaleString() },
-                { label: "Avg Brand Coverage",     value: data.platformData.avgBrandCoverage },
-                { label: "Avg Domain Coverage",    value: data.platformData.avgDomainCoverage },
-                        ];
-                sumStats.forEach((st, i) => {
-                                const x = 0.25 + i * 2.45;
-                                s4.addShape(pres.shapes.RECTANGLE, { x, y: 1.35, w: 2.3, h: 0.75, fill: { color: C.white }, line: { color: C.lightgray }, shadow: makeShadow() });
-                                s4.addText(st.value, { x, y: 1.4, w: 2.3, h: 0.38, fontSize: 18, bold: true, color: C.navy, align: "center", fontFace: "Calibri", margin: 0 });
-                                s4.addText(st.label, { x, y: 1.75, w: 2.3, h: 0.28, fontSize: 8, color: C.slate, align: "center", fontFace: "Calibri", margin: 0 });
-                });
-
-            const platforms = data.platformData.platforms;
-                const colX = [0.25, 2.1, 3.3, 4.5, 7.2];
-                const colW = [1.8, 1.1, 1.1, 2.6, 2.6];
-                const headers = ["Platform", "Mentions", "Citations", "Brand Visibility", "Domain Coverage"];
-                s4.addShape(pres.shapes.RECTANGLE, { x: 0.25, y: 2.35, w: 9.5, h: 0.3, fill: { color: C.lightgray }, line: { color: C.lightgray } });
-                headers.forEach((h, i) => s4.addText(h, { x: colX[i], y: 2.37, w: colW[i], h: 0.26, fontSize: 8, bold: true, color: C.slate, fontFace: "Calibri", margin: 0 }));
-
-            platforms.forEach((p, i) => {
-                            const y = 2.7 + i * 0.52;
-                            if (i % 2 === 0) s4.addShape(pres.shapes.RECTANGLE, { x: 0.25, y: y - 0.04, w: 9.5, h: 0.5, fill: { color: "F2F1FB" }, line: { color: "F2F1FB" } });
-                            s4.addText(p.name, { x: colX[0], y, w: colW[0], h: 0.3, fontSize: 10, bold: true, color: C.navy, fontFace: "Calibri", margin: 0 });
-                            s4.addText(p.mentions.toLocaleString(), { x: colX[1], y, w: colW[1], h: 0.3, fontSize: 10, color: C.navy, fontFace: "Calibri", margin: 0 });
-                            s4.addText(p.citations.toLocaleString(), { x: colX[2], y, w: colW[2], h: 0.3, fontSize: 10, color: C.navy, fontFace: "Calibri", margin: 0 });
-
-                                          const bvW = (p.brandVisibility / 100) * 2.3;
-                            s4.addShape(pres.shapes.RECTANGLE, { x: colX[3], y: y + 0.06, w: Math.max(bvW, 0.05), h: 0.18, fill: { color: C.navy }, line: { color: C.navy } });
-                            s4.addShape(pres.shapes.RECTANGLE, { x: colX[3] + bvW, y: y + 0.06, w: 2.3 - bvW, h: 0.18, fill: { color: C.lightgray }, line: { color: C.lightgray } });
-                            s4.addText(`${p.brandVisibility}%`, { x: colX[3], y, w: 0.5, h: 0.28, fontSize: 8, bold: true, color: C.navy, fontFace: "Calibri", margin: 0 });
-
-                                          const dcW = (p.domainCoverage / 100) * 2.3;
-                            s4.addShape(pres.shapes.RECTANGLE, { x: colX[4], y: y + 0.06, w: Math.max(dcW, 0.05), h: 0.18, fill: { color: C.violet }, line: { color: C.violet } });
-                            s4.addShape(pres.shapes.RECTANGLE, { x: colX[4] + dcW, y: y + 0.06, w: 2.3 - dcW, h: 0.18, fill: { color: C.lightgray }, line: { color: C.lightgray } });
-                            s4.addText(`${p.domainCoverage}%`, { x: colX[4], y, w: 0.5, h: 0.28, fontSize: 8, bold: true, color: C.violet, fontFace: "Calibri", margin: 0 });
-            });
-    }
-
-    // ── Slide 5: Key Insights ─────────────────────────────────────────────────────
-    {
-                const s5 = pres.addSlide();
-                s5.background = { color: C.navy };
-                addFooter(s5, pres, data.brandName, data.domain);
-                s5.addText("KEY INSIGHTS", { x: 0.5, y: 0.3, w: 9, h: 0.35, fontSize: 10, color: C.orange, bold: true, charSpacing: 4, fontFace: "Calibri", margin: 0 });
-                s5.addText(`${data.brandName} — GEO Audit Summary`, { x: 0.5, y: 0.65, w: 9, h: 0.5, fontSize: 22, color: C.white, bold: true, fontFace: "Calibri", margin: 0 });
-
-            const positions = [{ x: 0.25, y: 1.3 }, { x: 5.05, y: 1.3 }, { x: 0.25, y: 2.9 }, { x: 5.05, y: 2.9 }];
-                data.keyInsights.slice(0, 4).forEach((insight, i) => {
-                                const pos = positions[i], cardW = 4.55, cardH = 1.45;
-                                s5.addShape(pres.shapes.RECTANGLE, { x: pos.x, y: pos.y, w: cardW, h: cardH, fill: { color: C.darkgray }, line: { color: C.darkgray }, shadow: makeShadow() });
-                                s5.addShape(pres.shapes.RECTANGLE, { x: pos.x, y: pos.y, w: 0.06, h: cardH, fill: { color: C.orange }, line: { color: C.orange } });
-                                s5.addText(insight.label.toUpperCase(), { x: pos.x + 0.15, y: pos.y + 0.12, w: cardW - 0.2, h: 0.22, fontSize: 7, color: C.orange, bold: true, charSpacing: 2, fontFace: "Calibri", margin: 0 });
-                                s5.addText(insight.stat, { x: pos.x + 0.15, y: pos.y + 0.32, w: cardW - 0.2, h: 0.5, fontSize: 24, bold: true, color: C.white, fontFace: "Calibri", margin: 0 });
-                                s5.addText(insight.description, { x: pos.x + 0.15, y: pos.y + 0.82, w: cardW - 0.2, h: 0.55, fontSize: 9, color: C.lilac, fontFace: "Calibri", margin: 0, wrap: true });
-                });
-    }
-
-    pres.writeFile({ fileName: outputPath });
-        console.log(`✅ PPTX written: ${outputPath}`);
+  pres.writeFile({ fileName: outputPath });
+  console.log("✅ PPTX written:", outputPath);
 }
 
-// ─── API: POST /generate ──────────────────────────────────────────────────────────
+// ─── API: POST /generate ──────────────────────────────────────────────────────
 app.post("/generate", async (req, res) => {
-        const { url } = req.body;
-        if (!url || !url.includes("atlas.pepper.inc")) {
-                    return res.status(400).json({ error: "Please provide a valid Atlas report URL." });
-        }
+  const { url } = req.body;
+  if (!url || !url.includes("atlas.pepper.inc")) {
+    return res.status(400).json({ error: "Please provide a valid Atlas report URL." });
+  }
 
-             const id = uuidv4();
-        const pptxOut = path.join(TMP, `${id}.pptx`);
-        const pdfOut  = path.join(TMP, `${id}.pdf`);
+  const id = uuidv4();
+  const pptxOut = path.join(TMP, id + ".pptx");
+  const pdfOut  = path.join(TMP, id + ".pdf");
 
-             try {
-                         const raw  = await scrapeAtlasReport(url);
-                         const data = normalizeData(raw);
-                         buildPPTX(data, pptxOut);
+  try {
+    // Step 1 — Scrape: visit all 4 tabs, take full-page screenshots
+    const screenshots = await scrapeAtlasReport(url);
 
-            await new Promise((r) => setTimeout(r, 1000));
-                         console.log("📄 Converting to PDF...");
-                         execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 60000 });
+    // Step 2 — Extract: send screenshots to Claude Vision, get structured JSON
+    const rawData = await extractData(screenshots);
 
-            if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
+    // Step 3 — Normalize: fill defaults so nothing crashes
+    const data = normalizeData(rawData);
 
-            const brandSlug = data.brandName.toLowerCase().replace(/\s+/g, "-");
-                         res.setHeader("Content-Type", "application/pdf");
-                         res.setHeader("Content-Disposition", `attachment; filename="${brandSlug}-geo-audit.pdf"`);
-                         fs.createReadStream(pdfOut).pipe(res);
-                         res.on("finish", () => {
-                                         try { fs.unlinkSync(pptxOut); fs.unlinkSync(pdfOut); } catch {}
-                         });
-             } catch (err) {
-                         console.error("❌ Error:", err.message);
-                         res.status(500).json({ error: err.message || "Generation failed. Check the URL and try again." });
-             }
+    // Step 4 — Build: generate PPTX from structured data
+    buildPPTX(data, pptxOut);
+
+    // Step 5 — Convert to PDF
+    await new Promise(r => setTimeout(r, 1000));
+    console.log("📄 Converting to PDF...");
+    execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 60000 });
+
+    if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
+
+    const brandSlug = data.brandName.toLowerCase().replace(/\s+/g, "-");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${brandSlug}-geo-audit.pdf"`);
+    fs.createReadStream(pdfOut).pipe(res);
+    res.on("finish", () => {
+      try { fs.unlinkSync(pptxOut); fs.unlinkSync(pdfOut); } catch {}
+    });
+  } catch (err) {
+    console.error("❌ Error:", err.message);
+    res.status(500).json({ error: err.message || "Generation failed." });
+  }
 });
 
-// ─── Health check ─────────────────────────────────────────────────────────────────
+// ─── Health check ─────────────────────────────────────────────────────────────
 app.get("/health", (_, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Atlas PDF Generator running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Atlas PDF Generator on port ${PORT}`));
