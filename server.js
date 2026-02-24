@@ -116,6 +116,7 @@ async function extractData(screenshots) {
     { "rank": 2, "name": "NESTLE", "mentions": 28 },
     { "rank": 3, "name": "Jura", "mentions": 21 }
   ],
+  "brandLeaderboardRank": 2,
 
   "competitorMentions": [
     { "name": "WMF", "percentage": 11, "mentions": 33 },
@@ -157,6 +158,7 @@ async function extractData(screenshots) {
 
 Rules:
 - Extract ALL rows from every table visible (competitors, platforms, domains, brand pages, themes).
+- brandLeaderboardRank: read the brand's actual rank number directly from the leaderboard text (e.g. "#5 Netskope" means 5). Do NOT infer from array position — the leaderboard chart may only show top 3 bars even if the brand is ranked 4th, 5th, etc.
 - promptThemes: extract theme name, how many prompts it has, and list all prompt text visible.
 - competitorVisibilityMatrix: sourced from "Brand Visibility x Competitors" on the competitors tab. Each row = one theme, "brandVisibility" = the brand's own column integer %, "competitors" = {CompetitorName: integerPct, ...} for every other visible column. Extract ALL rows and ALL competitor columns.
 - brandVisibilityByPlatform: sourced from the "[BrandName] brand visibility" table on the platforms tab. Each row = one theme, keys are platform names (ChatGPT / Google AI Overview / Perplexity) with integer % values. Extract ALL rows visible.
@@ -211,7 +213,9 @@ function normalizeData(raw) {
   const competitorVisibilityMatrix = raw.competitorVisibilityMatrix?.length > 0 ? raw.competitorVisibilityMatrix : [];
 
   const isLeader = leaderboard[0]?.name === raw.brandName;
-  const leaderboardRank = isLeader ? "#1"
+  const leaderboardRank = raw.brandLeaderboardRank
+    ? "#" + raw.brandLeaderboardRank
+    : isLeader ? "#1"
     : "#" + (leaderboard.findIndex(b => b.name === raw.brandName) + 1 || leaderboard.length);
 
   return {
@@ -344,9 +348,10 @@ function buildSlide3(pres, d) {
       const isB = brand.name === d.brandName;
       const col = isB ? C.orange : (i === 0 ? C.teal : "BDBDCD");
 
-      s.addText(brand.name, { x:x-0.1, y:barY-0.38, w:barW+0.2, h:0.3, fontSize:8, bold:isB, color:isB?C.orange:C.navy, align:"center", fontFace:"Calibri" });
-      s.addShape(pres.shapes.OVAL, { x:x+barW/2-0.22, y:barY-0.62, w:0.44, h:0.44, fill:{color:C.white}, line:{color:C.lightgray} });
-      s.addText("#"+brand.rank, { x:x+barW/2-0.22, y:barY-0.62, w:0.44, h:0.44, fontSize:11, bold:true, color:C.navy, align:"center", valign:"middle", fontFace:"Calibri" });
+      // Layout (top → bottom): circle → brand name → bar
+      s.addShape(pres.shapes.OVAL, { x:x+barW/2-0.22, y:barY-0.96, w:0.44, h:0.44, fill:{color:C.white}, line:{color:C.lightgray} });
+      s.addText("#"+brand.rank, { x:x+barW/2-0.22, y:barY-0.96, w:0.44, h:0.44, fontSize:11, bold:true, color:C.navy, align:"center", valign:"middle", fontFace:"Calibri" });
+      s.addText(brand.name, { x:x-0.1, y:barY-0.5, w:barW+0.2, h:0.34, fontSize:8, bold:isB, color:isB?C.orange:C.navy, align:"center", fontFace:"Calibri", wrap:true });
       s.addShape(pres.shapes.RECTANGLE, { x, y:barY, w:barW, h:barH, fill:{color:col}, line:{color:col}, shadow:makeShadow() });
       s.addText(brand.mentions+" mentions", { x:x-0.1, y:chartBottom+0.06, w:barW+0.2, h:0.2, fontSize:7.5, color:C.slate, align:"center", fontFace:"Calibri" });
       if (isB) s.addText("👑", { x:x+barW/2-0.24, y:barY+0.06, w:0.48, h:0.35, fontSize:18, align:"center" });
