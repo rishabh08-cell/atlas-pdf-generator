@@ -86,22 +86,38 @@ async function extractData(screenshots) {
     { type: "image", source: { type: "base64", media_type: "image/png", data: b64 } },
   ]);
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY || "",
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-opus-4-5",
-      max_tokens: 8192,
-      system: "You are a precise data extraction expert. Extract every number, label, and data point visible in the Atlas GEO audit report screenshots. Return ONLY valid JSON, no markdown, no explanation.",
-      messages: [{
-        role: "user",
-        content: [
-          ...imageBlocks,
-          { type: "text", text: `Extract ALL data from these Atlas report tab screenshots into this exact JSON structure. Read numbers directly from the UI — never guess.
+  // Retry with exponential backoff — handles 529 Overloaded and transient errors
+  const MAX_RETRIES = 4;
+  const RETRY_DELAYS = [3000, 8000, 20000, 40000]; // ms
+
+  let lastErr;
+  let data;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      const delay = RETRY_DELAYS[attempt - 1];
+      console.log(`  ⏳ Claude overloaded — retrying in ${delay / 1000}s (attempt ${attempt}/${MAX_RETRIES})...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+
+    let res;
+    try {
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY || "",
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-4-5",
+          max_tokens: 8192,
+          system: "You are a precise data extraction expert. Extract every number, label, and data point visible in the Atlas GEO audit report screenshots. Return ONLY valid JSON, no markdown, no explanation.",
+          messages: [{
+            role: "user",
+            content: [
+              ...imageBlocks,
+              { type: "text", text: `Extract ALL data from these Atlas report tab screenshots into this exact JSON structure. Read numbers directly from the UI — never guess.
 
 {
   "brandName": "NESTLE",
@@ -110,30 +126,25 @@ async function extractData(screenshots) {
   "totalCitations": 33,
   "avgBrandCoverage": "9.3%",
   "avgDomainCoverage": "9.0%",
-
   "leaderboard": [
     { "rank": 1, "name": "WMF", "mentions": 33 },
     { "rank": 2, "name": "NESTLE", "mentions": 28 },
     { "rank": 3, "name": "Jura", "mentions": 21 }
   ],
   "brandLeaderboardRank": 2,
-
   "competitorMentions": [
     { "name": "WMF", "percentage": 11, "mentions": 33 },
     { "name": "NESTLE", "percentage": 9, "mentions": 28 }
   ],
-
   "platforms": [
     { "name": "ChatGPT", "mentions": 10, "citations": 5, "brandVisibility": 3, "domainCoverage": 1 },
     { "name": "Google AI Overview", "mentions": 12, "citations": 21, "brandVisibility": 4, "domainCoverage": 6 },
     { "name": "Perplexity", "mentions": 6, "citations": 7, "brandVisibility": 2, "domainCoverage": 2 }
   ],
-
   "promptThemes": [
-    { "theme": "24/7 Operations Efficiency & Compliance Management", "promptCount": 7, "prompts": ["best grab and go beverage solutions", "FSSAI compliant beverage vending solutions"] },
+    { "theme": "24/7 Operations Efficiency & Compliance Management", "promptCount": 7, "prompts": ["best grab and go beverage solutions"] },
     { "theme": "Beverage Quality Consistency & Menu Diversification", "promptCount": 8, "prompts": ["80 beverage options single machine"] }
   ],
-
   "competitorVisibilityMatrix": [
     {
       "theme": "24/7 Operations Efficiency & Compliance Management",
@@ -141,16 +152,13 @@ async function extractData(screenshots) {
       "competitors": { "WMF": 0, "Jura": 0, "Kaapi Machines": 0, "Franke": 3, "De'Longhi": 0, "La Cimbali": 0, "La Marzocco": 0, "Vendekin": 10, "Atlantis": 3 }
     }
   ],
-
   "brandVisibilityByPlatform": [
     { "theme": "24/7 Operations Efficiency & Compliance Management", "ChatGPT": 10, "Google AI Overview": 10, "Perplexity": 0 },
     { "theme": "Beverage Quality Consistency & Menu Diversification", "ChatGPT": 0, "Google AI Overview": 10, "Perplexity": 0 }
   ],
-
   "domainCitations": [
     { "domain": "www.reddit.com", "domainCoverage": "14%", "uniquePagesCited": 72, "domainShare": "3%" }
   ],
-
   "brandPages": [
     { "name": "Page title or URL", "prompts": 5 }
   ]
@@ -160,25 +168,45 @@ Rules:
 - Extract ALL rows from every table visible (competitors, platforms, domains, brand pages, themes).
 - brandLeaderboardRank: read the brand's actual rank number directly from the leaderboard text (e.g. "#5 Netskope" means 5). Do NOT infer from array position — the leaderboard chart may only show top 3 bars even if the brand is ranked 4th, 5th, etc.
 - promptThemes: extract theme name, how many prompts it has, and list all prompt text visible.
-- competitorVisibilityMatrix: sourced from "Brand Visibility x Competitors" on the competitors tab. Each row = one theme, "brandVisibility" = the brand's own column integer %, "competitors" = {CompetitorName: integerPct, ...} for every other visible column. Extract ALL rows and ALL competitor columns.
+- competitorVisibilityMatrix: sourced from "Brand Visibility x Competitors" on the competitors tab. Each row = one theme, "brandVisibility" = the brand's own column integer %, "competitors" = object with every other visible column name and integer % value. Extract ALL rows and ALL competitor columns.
 - brandVisibilityByPlatform: sourced from the "[BrandName] brand visibility" table on the platforms tab. Each row = one theme, keys are platform names (ChatGPT / Google AI Overview / Perplexity) with integer % values. Extract ALL rows visible.
 - Return ONLY the JSON.` }
-        ],
-      }],
-    }),
-  });
+            ],
+          }],
+        }),
+      });
+    } catch (networkErr) {
+      lastErr = networkErr;
+      console.warn(`  ⚠️  Network error on attempt ${attempt}: ${networkErr.message}`);
+      continue;
+    }
 
-  if (!res.ok) throw new Error(`Claude API error: ${res.status} — ${await res.text()}`);
-  const json = await res.json();
-  const text = json.content[0].text.trim();
+    // Retry on 529 (Overloaded) or 503 (Service Unavailable)
+    if (res.status === 529 || res.status === 503) {
+      const body = await res.text();
+      lastErr = new Error(`Claude API error: ${res.status} — ${body}`);
+      console.warn(`  ⚠️  Claude ${res.status} on attempt ${attempt} — ${body.substring(0, 100)}`);
+      continue;
+    }
 
-  let data;
-  try { data = JSON.parse(text); }
-  catch {
-    const m = text.match(/\{[\s\S]*\}/);
-    if (m) data = JSON.parse(m[0]);
-    else throw new Error("Could not parse Claude JSON response");
+    if (!res.ok) {
+      throw new Error(`Claude API error: ${res.status} — ${await res.text()}`);
+    }
+
+    const json = await res.json();
+    const text = json.content[0].text.trim();
+    try { data = JSON.parse(text); }
+    catch {
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) data = JSON.parse(m[0]);
+      else throw new Error("Could not parse Claude JSON response");
+    }
+
+    lastErr = null;
+    break; // success
   }
+
+  if (!data) throw lastErr || new Error("Claude API failed after all retries");
 
   console.log("  Brand:", data.brandName);
   console.log("  Leaderboard:", data.leaderboard?.length, "entries");
