@@ -15,19 +15,24 @@ if (!fs.existsSync(TMP)) fs.mkdirSync(TMP);
 
 // ─── Color palette ────────────────────────────────────────────────────────────
 const C = {
-  navy:      "1A1A3E",
-  purple:    "3D3A8C",
-  violet:    "5B4FBE",
-  lilac:     "9B93E3",
-  orange:    "F4A419",
-  yellow:    "F5C842",
+  // Pepper Primary Blue
+  navy:      "0D007D",   // primary deep blue
+  purple:    "3D35B5",   // primary mid blue
+  violet:    "7B7FD4",   // primary lavender
+  lilac:     "A8ABEA",   // primary light lavender
+  // Pepper Secondary Orange
+  orange:    "DA5012",   // secondary orange (CTA, accents)
+  // Pepper Secondary Green
+  teal:      "0B7251",   // secondary green
+  green:     "0E9468",   // secondary green mid
+  // Pepper Secondary Yellow
+  yellow:    "F9B02A",   // secondary yellow
+  // Neutrals
   white:     "FFFFFF",
-  offwhite:  "F8F7FF",
-  slate:     "64748B",
-  lightgray: "E8E6F5",
-  darkgray:  "2D2B55",
-  teal:      "0891B2",
-  green:     "16A34A",
+  offwhite:  "F5F5F8",   // slide backgrounds
+  slate:     "64748B",   // secondary text
+  lightgray: "E2E1F0",   // borders, dividers (tinted blue)
+  darkgray:  "1A1650",   // dark navy shade
 };
 
 function makeShadow() {
