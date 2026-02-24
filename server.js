@@ -134,7 +134,16 @@ async function extractData(screenshots) {
   ],
 
   "competitorVisibilityMatrix": [
-    { "theme": "24/7 Operations Efficiency", "brandVisibility": 7, "competitors": { "WMF": 0, "Jura": 0, "Kaapi Machines": 0, "Franke": 3 } }
+    {
+      "theme": "24/7 Operations Efficiency & Compliance Management",
+      "brandVisibility": 7,
+      "competitors": { "WMF": 0, "Jura": 0, "Kaapi Machines": 0, "Franke": 3, "De'Longhi": 0, "La Cimbali": 0, "La Marzocco": 0, "Vendekin": 10, "Atlantis": 3 }
+    }
+  ],
+
+  "brandVisibilityByPlatform": [
+    { "theme": "24/7 Operations Efficiency & Compliance Management", "ChatGPT": 10, "Google AI Overview": 10, "Perplexity": 0 },
+    { "theme": "Beverage Quality Consistency & Menu Diversification", "ChatGPT": 0, "Google AI Overview": 10, "Perplexity": 0 }
   ],
 
   "domainCitations": [
@@ -149,7 +158,8 @@ async function extractData(screenshots) {
 Rules:
 - Extract ALL rows from every table visible (competitors, platforms, domains, brand pages, themes).
 - promptThemes: extract theme name, how many prompts it has, and list all prompt text visible.
-- competitorVisibilityMatrix: each row is a theme with brand % and each competitor's %.
+- competitorVisibilityMatrix: sourced from "Brand Visibility x Competitors" on the competitors tab. Each row = one theme, "brandVisibility" = the brand's own column integer %, "competitors" = {CompetitorName: integerPct, ...} for every other visible column. Extract ALL rows and ALL competitor columns.
+- brandVisibilityByPlatform: sourced from the "[BrandName] brand visibility" table on the platforms tab. Each row = one theme, keys are platform names (ChatGPT / Google AI Overview / Perplexity) with integer % values. Extract ALL rows visible.
 - Return ONLY the JSON.` }
         ],
       }],
@@ -220,6 +230,7 @@ function normalizeData(raw) {
     domainCitations: domainCitations.slice(0, 10),
     brandPages: brandPages.slice(0, 8),
     competitorVisibilityMatrix,
+    brandVisibilityByPlatform: raw.brandVisibilityByPlatform?.length > 0 ? raw.brandVisibilityByPlatform : [],
   };
 }
 
@@ -420,60 +431,46 @@ function buildSlide5(pres, d) {
   ftr(s, pres, d.brandName, d.domain);
 
   const matrix = d.competitorVisibilityMatrix;
-  if (matrix.length === 0) {
+  if (!matrix || matrix.length === 0) {
     s.addText("No competitor visibility matrix data available.", { x:0.5, y:2.5, w:9, h:0.5, fontSize:12, color:C.slate, align:"center", fontFace:"Calibri" });
     return;
   }
 
-  // Collect all competitor names from matrix
   const compNames = [];
-  matrix.forEach(row => {
-    if (row.competitors) Object.keys(row.competitors).forEach(k => { if (!compNames.includes(k)) compNames.push(k); });
-  });
-  const allCols = [d.brandName, ...compNames.slice(0, 8)];
-
-  const colW = (9.5 / (allCols.length + 1));
-  const themeColW = 1.8;
-  const dataColW = (9.5 - themeColW) / allCols.length;
+  matrix.forEach(row => { if (row.competitors) Object.keys(row.competitors).forEach(k => { if (!compNames.includes(k)) compNames.push(k); }); });
+  const allCols = [d.brandName, ...compNames].slice(0, 10);
+  const themeColW = 1.9, dataColW = (9.5 - themeColW) / allCols.length;
   const startX = 0.25, headerY = 1.08, rowH = 0.32;
 
-  // Header row
   s.addShape(pres.shapes.RECTANGLE, { x:startX, y:headerY, w:9.5, h:rowH, fill:{color:C.navy}, line:{color:C.navy} });
-  s.addText("Topic", { x:startX+0.05, y:headerY+0.05, w:themeColW-0.1, h:rowH-0.1, fontSize:7.5, bold:true, color:C.white, fontFace:"Calibri" });
+  s.addText("Topic", { x:startX+0.05, y:headerY+0.05, w:themeColW-0.08, h:rowH-0.08, fontSize:7, bold:true, color:C.white, fontFace:"Calibri" });
   allCols.forEach((col, ci) => {
     const x = startX + themeColW + ci * dataColW;
     const isBrand = col === d.brandName;
-    s.addText(col, { x:x+0.02, y:headerY+0.05, w:dataColW-0.04, h:rowH-0.1, fontSize:6.5, bold:isBrand, color:isBrand?C.orange:C.white, align:"center", fontFace:"Calibri", wrap:true });
+    s.addText(col, { x:x+0.02, y:headerY+0.04, w:dataColW-0.04, h:rowH-0.08, fontSize:6, bold:isBrand, color:isBrand?C.orange:C.white, align:"center", fontFace:"Calibri", wrap:true });
   });
 
-  // Data rows
   matrix.slice(0, 11).forEach((row, ri) => {
     const y = headerY + rowH + ri * rowH;
     const bg = ri % 2 === 0 ? C.offwhite : C.white;
     s.addShape(pres.shapes.RECTANGLE, { x:startX, y, w:9.5, h:rowH, fill:{color:bg}, line:{color:C.lightgray} });
-    s.addText(row.theme || row.name || "", { x:startX+0.05, y:y+0.05, w:themeColW-0.1, h:rowH-0.08, fontSize:6.5, color:C.navy, fontFace:"Calibri", wrap:true });
-
+    s.addText(row.theme || "", { x:startX+0.05, y:y+0.05, w:themeColW-0.08, h:rowH-0.08, fontSize:6, color:C.navy, fontFace:"Calibri", wrap:true });
     allCols.forEach((col, ci) => {
       const x = startX + themeColW + ci * dataColW;
       const isBrand = col === d.brandName;
-      let pct = 0;
-      if (isBrand) pct = row.brandVisibility || 0;
-      else pct = row.competitors?.[col] ?? 0;
-
-      // Heat colour
+      const pct = isBrand
+        ? (typeof row.brandVisibility === 'number' ? row.brandVisibility : 0)
+        : (typeof row.competitors?.[col] === 'number' ? row.competitors[col] : 0);
       let cellCol = bg;
       if (isBrand && pct > 0) cellCol = C.purple;
       else if (pct >= 15) cellCol = "8B85D4";
       else if (pct >= 5) cellCol = "C4C0EA";
-
       if (cellCol !== bg) s.addShape(pres.shapes.RECTANGLE, { x:x+0.02, y:y+0.04, w:dataColW-0.04, h:rowH-0.08, fill:{color:cellCol}, line:{color:cellCol} });
-      s.addText(pct > 0 ? pct+"%" : "0%", { x:x+0.02, y:y+0.06, w:dataColW-0.04, h:rowH-0.1, fontSize:7, bold:isBrand, color:isBrand&&pct>0?C.white:(pct>=5?C.navy:C.slate), align:"center", fontFace:"Calibri" });
+      s.addText(pct > 0 ? pct+"%" : "0%", { x:x+0.02, y:y+0.05, w:dataColW-0.04, h:rowH-0.1, fontSize:7, bold:isBrand, color:(isBrand&&pct>0)?C.white:(pct>=8?C.white:C.slate), align:"center", fontFace:"Calibri" });
     });
   });
 
-  s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.", {
-    x:0.3, y:5.22, w:9.4, h:0.16, fontSize:7, italic:true, color:C.slate, align:"center", fontFace:"Calibri"
-  });
+  s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.", { x:0.3, y:5.22, w:9.4, h:0.16, fontSize:7, italic:true, color:C.slate, align:"center", fontFace:"Calibri" });
 }
 
 // ─── SLIDE 6: "What does each metric mean?" — static definitions ──────────────
@@ -560,63 +557,50 @@ function buildSlide7(pres, d) {
   });
 }
 
-// ─── SLIDE 8: Brand Visibility by Platform (theme × platform heatmap) ─────────
+// ─── SLIDE 8: Brand Visibility by Platform × Theme heatmap ─────────────────
 function buildSlide8(pres, d) {
   const s = pres.addSlide();
   s.background = { color: C.white };
   hdr(s, pres, d.brandName + " Brand Visibility by Platform & Theme", d.brandName);
   ftr(s, pres, d.brandName, d.domain);
 
-  const platNames = d.platforms.map(p => p.name);
-
-  if (d.competitorVisibilityMatrix.length === 0 || platNames.length === 0) {
-    // Fallback: simple platform bar chart
-    const maxM = Math.max(...d.platforms.map(p => p.brandVisibility || 0), 1);
-    d.platforms.forEach((p, i) => {
-      const y = 1.3 + i * 0.72;
-      const bw = Math.max(((p.brandVisibility||0) / maxM) * 7.0, 0.05);
-      s.addText(p.name, { x:0.3, y:y+0.08, w:2.2, h:0.28, fontSize:10, bold:true, color:C.navy, fontFace:"Calibri" });
-      s.addShape(pres.shapes.RECTANGLE, { x:2.6, y:y+0.1, w:bw, h:0.22, fill:{color:C.purple}, line:{color:C.purple} });
-      s.addText((p.brandVisibility||0)+"%", { x:2.65+bw, y:y+0.08, w:0.6, h:0.28, fontSize:9, bold:true, color:C.purple, fontFace:"Calibri" });
-    });
+  // Data: brandVisibilityByPlatform — from "[Brand] brand visibility" table on /platforms
+  // Each row: { theme: "...", "ChatGPT": 10, "Google AI Overview": 10, "Perplexity": 0 }
+  const rows = d.brandVisibilityByPlatform;
+  if (!rows || rows.length === 0) {
+    s.addText("No platform visibility data available.", { x:0.5, y:2.8, w:9, h:0.5, fontSize:12, color:C.slate, align:"center", fontFace:"Calibri" });
     return;
   }
 
-  // Theme × Platform heatmap sourced from competitorVisibilityMatrix brand column
-  const themes = d.competitorVisibilityMatrix.slice(0, 10);
-  const themeColW = 2.8, dataColW = (9.5 - themeColW) / platNames.length;
-  const startX = 0.25, headerY = 1.08, rowH = 0.36;
+  const platNames = Object.keys(rows[0]).filter(k => k !== 'theme');
+  const themeColW = 3.2, dataColW = (9.5 - themeColW) / platNames.length;
+  const startX = 0.25, headerY = 1.08, rowH = 0.35;
 
   s.addShape(pres.shapes.RECTANGLE, { x:startX, y:headerY, w:9.5, h:rowH, fill:{color:C.navy}, line:{color:C.navy} });
-  s.addText("Themes", { x:startX+0.08, y:headerY+0.07, w:themeColW, h:rowH-0.1, fontSize:7.5, bold:true, color:C.white, fontFace:"Calibri" });
+  s.addText("Themes", { x:startX+0.08, y:headerY+0.07, w:themeColW-0.12, h:rowH-0.1, fontSize:8, bold:true, color:C.white, fontFace:"Calibri" });
   platNames.forEach((pn, pi) => {
     const x = startX + themeColW + pi * dataColW;
-    s.addText(pn, { x:x+0.03, y:headerY+0.05, w:dataColW-0.06, h:rowH-0.1, fontSize:7, bold:true, color:C.white, align:"center", fontFace:"Calibri", wrap:true });
+    s.addText(pn, { x:x+0.04, y:headerY+0.05, w:dataColW-0.08, h:rowH-0.1, fontSize:8, bold:true, color:C.white, align:"center", fontFace:"Calibri", wrap:true });
   });
 
-  themes.forEach((row, ri) => {
+  rows.slice(0, 11).forEach((row, ri) => {
     const y = headerY + rowH + ri * rowH;
     const bg = ri % 2 === 0 ? C.offwhite : C.white;
     s.addShape(pres.shapes.RECTANGLE, { x:startX, y, w:9.5, h:rowH, fill:{color:bg}, line:{color:C.lightgray} });
-    s.addText(row.theme || "", { x:startX+0.08, y:y+0.06, w:themeColW-0.12, h:rowH-0.1, fontSize:7, color:C.navy, fontFace:"Calibri", wrap:true });
-
+    s.addText(row.theme || "", { x:startX+0.08, y:y+0.07, w:themeColW-0.14, h:rowH-0.1, fontSize:7, color:C.navy, fontFace:"Calibri", wrap:true });
     platNames.forEach((pn, pi) => {
       const x = startX + themeColW + pi * dataColW;
-      // Use platform-specific visibility from row if available, else fall back to brand visibility
-      const platVal = row.platformVisibility?.[pn] ?? row.brandVisibility ?? 0;
+      const pct = typeof row[pn] === 'number' ? row[pn] : 0;
       let cellCol = bg;
-      if (platVal >= 15) cellCol = C.purple;
-      else if (platVal >= 5) cellCol = "C4C0EA";
-      if (cellCol !== bg) s.addShape(pres.shapes.RECTANGLE, { x:x+0.03, y:y+0.05, w:dataColW-0.06, h:rowH-0.1, fill:{color:cellCol}, line:{color:cellCol} });
-      s.addText(platVal > 0 ? platVal+"%" : "0%", { x:x+0.03, y:y+0.07, w:dataColW-0.06, h:rowH-0.12, fontSize:7.5, color:platVal>=5?C.white:C.slate, align:"center", fontFace:"Calibri" });
+      if (pct >= 15) cellCol = C.purple;
+      else if (pct >= 5) cellCol = "C4C0EA";
+      if (cellCol !== bg) s.addShape(pres.shapes.RECTANGLE, { x:x+0.04, y:y+0.05, w:dataColW-0.08, h:rowH-0.1, fill:{color:cellCol}, line:{color:cellCol} });
+      s.addText(pct > 0 ? pct+"%" : "0%", { x:x+0.04, y:y+0.07, w:dataColW-0.08, h:rowH-0.12, fontSize:8, color:pct>=5?C.white:C.slate, align:"center", fontFace:"Calibri" });
     });
   });
 
-  s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.", {
-    x:0.3, y:5.22, w:9.4, h:0.16, fontSize:7, italic:true, color:C.slate, align:"center", fontFace:"Calibri"
-  });
+  s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.", { x:0.3, y:5.22, w:9.4, h:0.16, fontSize:7, italic:true, color:C.slate, align:"center", fontFace:"Calibri" });
 }
-
 
 // ─── STEP 4: Build the PPTX ───────────────────────────────────────────────────
 function buildPPTX(data, outputPath) {
