@@ -425,13 +425,13 @@ function buildSlide7(pres, d, lp) {
     s.addText(p.name,{x:colX[0],y,w:colW[0],h:0.28,fontSize:9.5,bold:true,color:C.navy,fontFace:"Calibri"});
     s.addText(String(p.mentions),{x:colX[1],y,w:colW[1],h:0.28,fontSize:9.5,color:C.navy,fontFace:"Calibri"});
     s.addText(String(p.citations),{x:colX[2],y,w:colW[2],h:0.28,fontSize:9.5,color:C.navy,fontFace:"Calibri"});
-    const bv=Math.min(parseFloat(String(p.brandVisibility||0))||0,100),bvW=(bv/100)*2.5;
-    s.addShape(pres.shapes.RECTANGLE,{x:colX[3],y:y+0.08,w:2.5,h:0.14,fill:{color:C.lightgray},line:{color:C.lightgray}});
-    if(bvW>0)s.addShape(pres.shapes.RECTANGLE,{x:colX[3],y:y+0.08,w:bvW,h:0.14,fill:{color:C.navy},line:{color:C.navy}});
+    const bv=Math.min(parseFloat(String(p.brandVisibility||0))||0,100),bvW=(bv/100)*2.0;
+    s.addShape(pres.shapes.RECTANGLE,{x:colX[3]+0.48,y:y+0.08,w:2.0,h:0.14,fill:{color:C.lightgray},line:{color:C.lightgray}});
+    if(bvW>0)s.addShape(pres.shapes.RECTANGLE,{x:colX[3]+0.48,y:y+0.08,w:bvW,h:0.14,fill:{color:C.navy},line:{color:C.navy}});
     s.addText(bv+"%",{x:colX[3],y,w:0.45,h:0.28,fontSize:8,bold:true,color:C.navy,fontFace:"Calibri"});
-    const dc=Math.min(parseFloat(String(p.domainCoverage||0))||0,100),dcW=(dc/100)*2.5;
-    s.addShape(pres.shapes.RECTANGLE,{x:colX[4],y:y+0.08,w:2.5,h:0.14,fill:{color:C.lightgray},line:{color:C.lightgray}});
-    if(dcW>0)s.addShape(pres.shapes.RECTANGLE,{x:colX[4],y:y+0.08,w:dcW,h:0.14,fill:{color:C.violet},line:{color:C.violet}});
+    const dc=Math.min(parseFloat(String(p.domainCoverage||0))||0,100),dcW=(dc/100)*2.0;
+    s.addShape(pres.shapes.RECTANGLE,{x:colX[4]+0.48,y:y+0.08,w:2.0,h:0.14,fill:{color:C.lightgray},line:{color:C.lightgray}});
+    if(dcW>0)s.addShape(pres.shapes.RECTANGLE,{x:colX[4]+0.48,y:y+0.08,w:dcW,h:0.14,fill:{color:C.violet},line:{color:C.violet}});
     s.addText(dc+"%",{x:colX[4],y,w:0.45,h:0.28,fontSize:8,bold:true,color:C.violet,fontFace:"Calibri"});
   });
 }
