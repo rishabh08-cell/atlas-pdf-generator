@@ -206,11 +206,11 @@ function buildSlide1(pres, d) {
   s.addText("by pepper.inc",{x:1.63,y:0.44,w:1.5,h:0.26,fontSize:8,color:C.lilac,fontFace:"Calibri"});
   // Pepper logo pill on cover
   const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:7.8,y:0.28,w:2.0,h:0.46,fill:{color:"FFFFFF"},line:{color:"FFFFFF"},rectRadius:0.08});
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:8.2,y:0.3,w:1.4,h:0.36,fill:{color:"FFFFFF"},line:{color:"FFFFFF"},rectRadius:0.08});
   if (fs.existsSync(pepperLogoPath)) {
-    s.addImage({path:pepperLogoPath,x:7.85,y:0.31,w:1.9,h:0.38,sizing:{type:"contain",w:1.9,h:0.38}});
+    s.addImage({path:pepperLogoPath,x:8.25,y:0.33,w:1.3,h:0.28,sizing:{type:"contain",w:1.3,h:0.28}});
   } else {
-    s.addText("pepper",{x:7.85,y:0.31,w:1.9,h:0.38,fontSize:10,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addText("pepper",{x:8.25,y:0.33,w:1.3,h:0.28,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
   }
   s.addText("GEO AUDIT REPORT",{x:0.5,y:1.08,w:6,h:0.28,fontSize:9,color:C.orange,bold:true,charSpacing:4,fontFace:"Calibri"});
   s.addText(d.brandName,{x:0.5,y:1.38,w:7,h:1.18,fontSize:50,bold:true,color:C.white,fontFace:"Calibri"});
