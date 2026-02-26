@@ -502,9 +502,10 @@
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const name = url.split("/reports/")[1]?.split("/")[0] || "report";
+      const cd = response.headers.get("content-disposition") || ""; const name = (cd.match(/filename="?([^";
+]+)"?/) || [])[1] || "GEO-report.pdf";
       a.href = blobUrl;
-      a.download = `atlas-geo-audit-${name}.pdf`;
+      a.download = name;
       document.body.appendChild(a);
       a.click();
       a.remove();
