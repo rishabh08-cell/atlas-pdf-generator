@@ -310,7 +310,7 @@ function buildSlide3(pres, d, lp) {
       s.addText(brand.mentions+" mentions",{x:x-0.1,y:cb+0.06,w:barW+0.2,h:0.2,fontSize:7.5,color:C.slate,align:"center",fontFace:"Calibri"});
       if (isB) s.addText("👑",{x:x+barW/2-0.24,y:barY+0.06,w:0.48,h:0.35,fontSize:18,align:"center"});
     });
-    s.addText("Brand Leaderboard",{x:0.3,y:1.1,w:4.5,h:0.25,fontSize:9,bold:true,color:C.slate,fontFace:"Calibri"});
+    // Brand Leaderboard subtitle removed — redundant with main header
   }
   const comps=d.competitorMentions.slice(0,10),maxPct=Math.max(...comps.map(c=>c.percentage),1);
   s.addText("Competitor Mentions vs. "+d.brandName,{x:5.0,y:1.1,w:4.7,h:0.25,fontSize:9,bold:true,color:C.slate,fontFace:"Calibri"});
@@ -321,7 +321,7 @@ function buildSlide3(pres, d, lp) {
     s.addText(comp.name,{x:5.26,y:y+0.05,w:1.4,h:0.2,fontSize:8,bold:isB,color:isB?C.purple:C.navy,fontFace:"Calibri"});
     const bw=Math.min((comp.percentage/maxPct)*2.6,2.6);
     s.addShape(pres.shapes.RECTANGLE,{x:6.7,y:y+0.06,w:Math.max(bw,0.05),h:0.18,fill:{color:isB?C.navy:C.lightgray},line:{color:isB?C.navy:C.lightgray}});
-    s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:6.72+bw,y:y+0.05,w:2.5,h:0.2,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
+    s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:6.72+bw,y:y+0.05,w:Math.max(9.7-(6.72+bw),0.8),h:0.2,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
   });
   s.addShape(pres.shapes.RECTANGLE,{x:4.75,y:1.05,w:0.03,h:3.8,fill:{color:C.lightgray},line:{color:C.lightgray}});
 }
