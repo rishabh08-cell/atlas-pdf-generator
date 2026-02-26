@@ -192,8 +192,27 @@ function normalizeData(raw) {
     competitorMentions:competitorMentions.slice(0,10), platforms,
     promptThemes:raw.promptThemes?.length>0?raw.promptThemes:[],
     domainCitations:(raw.domainCitations||[]).slice(0,10), brandPages:(raw.brandPages||[]).slice(0,8),
-    competitorVisibilityMatrix:raw.competitorVisibilityMatrix?.length>0?raw.competitorVisibilityMatrix:[],
-    brandVisibilityByPlatform:raw.brandVisibilityByPlatform?.length>0?raw.brandVisibilityByPlatform:[],
+    competitorVisibilityMatrix:(raw.competitorVisibilityMatrix||[]).map(row => {
+      if (row.brandVisibility !== undefined && row.competitors) return row;
+      const theme = row.theme || "";
+      const competitors = {};
+      let brandVis = 0;
+      Object.keys(row).forEach(k => {
+        if (k === "theme") return;
+        const val = parseFloat(String(row[k])) || 0;
+        if (k === raw.brandName) brandVis = val;
+        else competitors[k] = val;
+      });
+      return { theme, brandVisibility: brandVis, competitors };
+    }),
+    brandVisibilityByPlatform:(raw.brandVisibilityByPlatform||[]).map(row => {
+      const out = {};
+      Object.keys(row).forEach(k => {
+        if (k === "theme") out.theme = row[k];
+        else out[k] = parseFloat(String(row[k])) || 0;
+      });
+      return out;
+    }),
   };
 }
 
