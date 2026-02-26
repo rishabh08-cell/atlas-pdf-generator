@@ -236,6 +236,7 @@ function buildSlide2(pres, d) {
     s.addShape(pres.shapes.RECTANGLE,{x,y,w:0.04,h:0.72,fill:{color:C.teal},line:{color:C.teal}});
     s.addText(t.theme,{x:x+0.1,y:y+0.08,w:2.85,h:0.34,fontSize:9.5,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
     s.addText((t.promptCount||t.prompts?.length||0)+" prompts",{x:x+0.1,y:y+0.46,w:2.85,h:0.2,fontSize:8.5,color:C.slate,fontFace:"Calibri"});
+});
 }
 
 // ─── SLIDE 3: Leaderboard + Competitors ─────────────────────────────────────
