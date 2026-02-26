@@ -274,7 +274,7 @@ function buildSlide3(pres, d, lp) {
   if (brands.length>0) {
     const maxM=Math.max(...brands.map(b=>b.mentions),1),barW=1.0,gap=0.55,startX=0.3,cb=4.65,ch=2.6;
     brands.forEach((brand,i)=>{
-      const x=startX+i*(barW+gap),barH=Math.max((brand.mentions/maxM)*ch,0.15),barY=cb-barH,isB=brand.name===d.brandName;
+      const x=startX+i*(barW+gap),barH=Math.max((brand.mentions/maxM)*ch,0.15),barY=Math.max(cb-barH,1.55),isB=brand.name===d.brandName;
       const col=isB?C.orange:(i===0?C.teal:"BDBDCD");
       s.addShape(pres.shapes.OVAL,{x:x+barW/2-0.22,y:barY-0.96,w:0.44,h:0.44,fill:{color:C.white},line:{color:C.lightgray}});
       s.addText("#"+brand.rank,{x:x+barW/2-0.22,y:barY-0.96,w:0.44,h:0.44,fontSize:11,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
@@ -292,7 +292,7 @@ function buildSlide3(pres, d, lp) {
     s.addShape(pres.shapes.OVAL,{x:5.0,y:y+0.04,w:0.22,h:0.22,fill:{color:isB?C.purple:C.lightgray},line:{color:isB?C.purple:C.lightgray}});
     s.addText(comp.name[0].toUpperCase(),{x:5.0,y:y+0.04,w:0.22,h:0.22,fontSize:7,bold:true,color:isB?C.white:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
     s.addText(comp.name,{x:5.26,y:y+0.05,w:1.4,h:0.2,fontSize:8,bold:isB,color:isB?C.purple:C.navy,fontFace:"Calibri"});
-    const bw=(comp.percentage/maxPct)*3.5;
+    const bw=Math.min((comp.percentage/maxPct)*2.6,2.6);
     s.addShape(pres.shapes.RECTANGLE,{x:6.7,y:y+0.06,w:Math.max(bw,0.05),h:0.18,fill:{color:isB?C.navy:C.lightgray},line:{color:isB?C.navy:C.lightgray}});
     s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:6.72+bw,y:y+0.05,w:2.5,h:0.2,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
   });
@@ -398,11 +398,11 @@ function buildSlide7(pres, d, lp) {
     s.addText(p.name,{x:colX[0],y,w:colW[0],h:0.28,fontSize:9.5,bold:true,color:C.navy,fontFace:"Calibri"});
     s.addText(String(p.mentions),{x:colX[1],y,w:colW[1],h:0.28,fontSize:9.5,color:C.navy,fontFace:"Calibri"});
     s.addText(String(p.citations),{x:colX[2],y,w:colW[2],h:0.28,fontSize:9.5,color:C.navy,fontFace:"Calibri"});
-    const bv=Math.min(p.brandVisibility||0,100),bvW=(bv/100)*2.5;
+    const bv=Math.min(parseFloat(String(p.brandVisibility||0))||0,100),bvW=(bv/100)*2.5;
     s.addShape(pres.shapes.RECTANGLE,{x:colX[3],y:y+0.08,w:2.5,h:0.14,fill:{color:C.lightgray},line:{color:C.lightgray}});
     if(bvW>0)s.addShape(pres.shapes.RECTANGLE,{x:colX[3],y:y+0.08,w:bvW,h:0.14,fill:{color:C.navy},line:{color:C.navy}});
     s.addText(bv+"%",{x:colX[3],y,w:0.45,h:0.28,fontSize:8,bold:true,color:C.navy,fontFace:"Calibri"});
-    const dc=Math.min(p.domainCoverage||0,100),dcW=(dc/100)*2.5;
+    const dc=Math.min(parseFloat(String(p.domainCoverage||0))||0,100),dcW=(dc/100)*2.5;
     s.addShape(pres.shapes.RECTANGLE,{x:colX[4],y:y+0.08,w:2.5,h:0.14,fill:{color:C.lightgray},line:{color:C.lightgray}});
     if(dcW>0)s.addShape(pres.shapes.RECTANGLE,{x:colX[4],y:y+0.08,w:dcW,h:0.14,fill:{color:C.violet},line:{color:C.violet}});
     s.addText(dc+"%",{x:colX[4],y,w:0.45,h:0.28,fontSize:8,bold:true,color:C.violet,fontFace:"Calibri"});
@@ -427,7 +427,7 @@ function buildSlide8(pres, d, lp) {
     s.addShape(pres.shapes.RECTANGLE,{x:startX,y,w:9.5,h:rowH,fill:{color:bg},line:{color:C.lightgray}});
     s.addText(row.theme||"",{x:startX+0.08,y:y+0.07,w:themeColW-0.14,h:rowH-0.1,fontSize:7,color:C.navy,fontFace:"Calibri",wrap:true});
     platNames.forEach((pn,pi)=>{
-      const x=startX+themeColW+pi*dataColW,pct=typeof row[pn]==='number'?row[pn]:0;
+      const x=startX+themeColW+pi*dataColW,pct=parseFloat(String(row[pn]||0))||0;
       let cc=bg; if(pct>=15)cc=C.purple; else if(pct>=5)cc="C4C0EA";
       if(cc!==bg)s.addShape(pres.shapes.RECTANGLE,{x:x+0.04,y:y+0.05,w:dataColW-0.08,h:rowH-0.1,fill:{color:cc},line:{color:cc}});
       s.addText(pct>0?pct+"%":"0%",{x:x+0.04,y:y+0.07,w:dataColW-0.08,h:rowH-0.12,fontSize:8,color:pct>=5?C.white:C.slate,align:"center",fontFace:"Calibri"});
