@@ -102,26 +102,30 @@ async function scrapeAtlasReport(url) {
   console.log("\n🔍 Scraping:", url);
   const browser = await chromium.launch({ args:["--no-sandbox","--disable-setuid-sandbox"], headless:true });
   const tabs = getAtlasTabUrls(url); const screenshots = {};
+  const pageTexts = {};
   try {
     for (const [name, tabUrl] of Object.entries(tabs)) {
       const page = await browser.newPage(); await page.setViewportSize({ width:1440, height:900 });
       try {
         await page.goto(tabUrl, { waitUntil:"networkidle", timeout:60000 }); await page.waitForTimeout(5000);
         const buf = await page.screenshot({ fullPage:true });
-        screenshots[name] = buf.toString("base64"); console.log("  ✅", name, Math.round(buf.length/1024)+"KB");
+        screenshots[name] = buf.toString("base64");
+        try { pageTexts[name] = await page.innerText('body'); } catch(e) {}
+        console.log("  ✅", name, Math.round(buf.length/1024)+"KB");
       } catch(e) { console.warn("  ⚠️", name, e.message); } finally { await page.close(); }
     }
   } finally { await browser.close(); }
   if (!screenshots.overview) throw new Error("Overview screenshot failed.");
-  return screenshots;
+  return { screenshots, pageTexts };
 }
 
 // ─── STEP 2: Extract ─────────────────────────────────────────────────────────
-async function extractData(screenshots) {
+async function extractData({ screenshots, pageTexts }) {
   console.log("  🤖 Sending to Claude Vision...");
   const imageBlocks = Object.entries(screenshots).flatMap(([name,b64]) => [
     { type:"text", text:`## Tab: ${name}` },
     { type:"image", source:{ type:"base64", media_type:"image/png", data:b64 } },
+    ...(pageTexts[name] ? [{ type:"text", text:`Page DOM text for ${name} tab:\n${pageTexts[name].substring(0,6000)}` }] : []),
   ]);
   const MAX_RETRIES=4, RETRY_DELAYS=[3000,8000,20000,40000];
   let lastErr, data;
@@ -161,7 +165,11 @@ Rules: Extract ALL rows. brandLeaderboardRank: read rank directly (e.g. "#5 Nets
     lastErr=null; break;
   }
   if (!data) throw lastErr||new Error("Claude API failed after all retries");
-  console.log("  Brand:",data.brandName,"| Platforms:",data.platforms?.length,"| Themes:",data.promptThemes?.length);
+  console.log("  Brand:",data.brandName,"| Platforms:",data.platforms?.length,"| Themes:",data.promptThemes?.length,"| Matrix:",data.competitorVisibilityMatrix?.length,"| VisRows:",data.brandVisibilityByPlatform?.length);
+  if (!data.competitorVisibilityMatrix?.length) console.log("  ⚠️ competitorVisibilityMatrix EMPTY - Claude did not extract it");
+  if (!data.brandVisibilityByPlatform?.length) console.log("  ⚠️ brandVisibilityByPlatform EMPTY - Claude did not extract it");
+  if (data.competitorVisibilityMatrix?.length) console.log("  Matrix[0]:", JSON.stringify(data.competitorVisibilityMatrix[0]).substring(0,150));
+  if (data.brandVisibilityByPlatform?.length) console.log("  Visibility[0]:", JSON.stringify(data.brandVisibilityByPlatform[0]).substring(0,150));
   return data;
 }
 
