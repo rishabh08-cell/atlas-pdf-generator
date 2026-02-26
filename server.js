@@ -5,8 +5,6 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const https = require("https");
-const http = require("http");
 
 const app = express();
 app.use(express.json());
@@ -15,8 +13,6 @@ app.use(express.static("public"));
 const TMP = path.join(__dirname, "tmp");
 if (!fs.existsSync(TMP)) fs.mkdirSync(TMP);
 
-const LOGOS_DIR = path.join(__dirname, "public", "logos");
-if (!fs.existsSync(LOGOS_DIR)) fs.mkdirSync(LOGOS_DIR, { recursive: true });
 
 // ─── Pepper brand colour palette ────────────────────────────────────────────
 const C = {
@@ -39,57 +35,11 @@ function makeShadow() {
   return { type: "outer", blur: 6, offset: 2, angle: 135, color: "000000", opacity: 0.08 };
 }
 
-// ─── Logo helpers ────────────────────────────────────────────────────────────
-async function fetchBrandLogo(brandName, domain) {
-  const slug = brandName.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const exts = [".png", ".jpg", ".jpeg", ".svg"];
-  for (const ext of exts) {
-    const p = path.join(LOGOS_DIR, slug + ext);
-    if (fs.existsSync(p)) { console.log("  logo: pre-committed", p); return p; }
-  }
-  try {
-    const logoPath = await scrapeBrandLogo(domain, slug);
-    if (logoPath) return logoPath;
-  } catch (e) { console.warn("  logo scrape failed:", e.message); }
-  console.warn("  no logo for", brandName, "- using text initials");
-  return null;
-}
 
-async function scrapeBrandLogo(domain, slug) {
-  const cleanDomain = domain.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
-  const candidates = [
-    `https://logo.clearbit.com/${cleanDomain}`,
-    `https://${cleanDomain}/favicon.ico`,
-  ];
-  for (const logoUrl of candidates) {
-    try {
-      const buf = await downloadUrl(logoUrl, 5000);
-      if (buf && buf.length > 500) {
-        const ext = logoUrl.includes("favicon") ? ".ico" : ".png";
-        const destPath = path.join(TMP, slug + "-logo" + ext);
-        fs.writeFileSync(destPath, buf);
-        console.log("  logo downloaded:", logoUrl, buf.length, "bytes");
-        return destPath;
-      }
-    } catch {}
-  }
-  return null;
-}
 
-function downloadUrl(url, timeoutMs = 8000) {
-  return new Promise((resolve, reject) => {
-    const proto = url.startsWith("https") ? https : http;
-    const req = proto.get(url, { timeout: timeoutMs, headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
-      if (res.statusCode === 301 || res.statusCode === 302) return resolve(downloadUrl(res.headers.location, timeoutMs));
-      if (res.statusCode !== 200) return resolve(null);
-      const chunks = [];
-      res.on("data", c => chunks.push(c));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-    });
-    req.on("error", reject);
-    req.on("timeout", () => { req.destroy(); reject(new Error("timeout")); });
-  });
-}
+
+
+
 
 // ─── Atlas tab URL resolver ──────────────────────────────────────────────────
 function getAtlasTabUrls(baseUrl) {
@@ -217,23 +167,21 @@ function normalizeData(raw) {
 }
 
 // ─── PPTX layout helpers ─────────────────────────────────────────────────────
-function logoPill(s, pres, brandName, brandLogoPath) {
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:7.6,y:0.06,w:2.25,h:0.38, fill:{color:C.white}, line:{color:C.lightgray,pt:1}, rectRadius:0.06, shadow:makeShadow() });
-  s.addShape(pres.shapes.RECTANGLE, { x:8.72,y:0.1,w:0.015,h:0.28, fill:{color:C.lightgray}, line:{color:C.lightgray} });
-  if (brandLogoPath && fs.existsSync(brandLogoPath)) {
-    try { s.addImage({ path:brandLogoPath, x:7.65,y:0.09,w:0.9,h:0.28, sizing:{type:"contain",w:0.9,h:0.28} }); }
-    catch { s.addText(brandName.substring(0,5).toUpperCase(), { x:7.65,y:0.09,w:0.9,h:0.28, fontSize:7,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri" }); }
+function logoPill(s, pres) {
+  const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:8.1,y:0.06,w:1.75,h:0.38, fill:{color:C.white}, line:{color:C.lightgray,pt:1}, rectRadius:0.06, shadow:makeShadow() });
+  if (fs.existsSync(pepperLogoPath)) {
+    s.addImage({ path:pepperLogoPath, x:8.15,y:0.09,w:1.65,h:0.3, sizing:{type:"contain",w:1.65,h:0.3} });
   } else {
-    s.addText(brandName.substring(0,6).toUpperCase(), { x:7.65,y:0.09,w:0.9,h:0.28, fontSize:7,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri" });
+    s.addText("pepper", { x:8.15,y:0.09,w:1.65,h:0.3, fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri" });
   }
-  s.addText("🌶 pepper", { x:8.74,y:0.09,w:1.08,h:0.28, fontSize:7.5,bold:true,color:C.orange,align:"center",valign:"middle",fontFace:"Calibri" });
 }
 
-function hdr(s, pres, title, brandName, brandLogoPath) {
+function hdr(s, pres, title, brandName) {
   s.addShape(pres.shapes.RECTANGLE, { x:0,y:0,w:10,h:0.08, fill:{color:C.teal}, line:{color:C.teal} });
   s.addText("atlas", { x:0.3,y:0.12,w:0.9,h:0.3, fontSize:11,bold:true,color:C.navy,fontFace:"Calibri" });
   s.addText("by pepper.inc", { x:1.2,y:0.17,w:1.3,h:0.22, fontSize:7,color:C.slate,fontFace:"Calibri" });
-  logoPill(s, pres, brandName, brandLogoPath);
+  logoPill(s, pres);
   s.addText(title, { x:0.3,y:0.5,w:7.2,h:0.48, fontSize:18,bold:true,color:C.navy,fontFace:"Calibri" });
   s.addShape(pres.shapes.RECTANGLE, { x:0.3,y:0.95,w:1.8,h:0.03, fill:{color:C.teal}, line:{color:C.teal} });
 }
@@ -243,27 +191,27 @@ function ftr(s, pres, brand, domain) {
   s.addText(brand+" · "+domain+" · GEO Audit by Atlas / Pepper.inc", { x:0.3,y:5.43,w:9.4,h:0.18, fontSize:6.5,color:"AAAACC",fontFace:"Calibri" });
 }
 
-function staticHdr(s, pres, title, brandName, brandLogoPath) {
-  logoPill(s, pres, brandName, brandLogoPath);
+function staticHdr(s, pres, title, brandName) {
+  logoPill(s, pres);
   s.addText(title, { x:0.35,y:0.12,w:7.15,h:0.42, fontSize:18,bold:true,color:C.navy,fontFace:"Calibri" });
   s.addShape(pres.shapes.RECTANGLE, { x:0.35,y:0.56,w:3.5,h:0.025, fill:{color:C.navy}, line:{color:C.navy} });
 }
 
 // ─── SLIDE 1: Cover ──────────────────────────────────────────────────────────
-function buildSlide1(pres, d, lp) {
+function buildSlide1(pres, d) {
   const s=pres.addSlide(); s.background={color:C.navy};
   s.addShape(pres.shapes.OVAL,{x:7.5,y:-0.5,w:3.5,h:3.5,fill:{color:"150050"},line:{color:"150050"}});
   s.addShape(pres.shapes.OVAL,{x:8.2,y:0.2,w:2.0,h:2.0,fill:{color:C.purple},line:{color:C.purple}});
   s.addText("atlas",{x:0.5,y:0.38,w:1.1,h:0.38,fontSize:15,bold:true,color:C.orange,fontFace:"Calibri"});
   s.addText("by pepper.inc",{x:1.63,y:0.44,w:1.5,h:0.26,fontSize:8,color:C.lilac,fontFace:"Calibri"});
-  // Co-logo pill (white pill on dark bg)
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:7.4,y:0.28,w:2.35,h:0.46,fill:{color:"FFFFFF"},line:{color:"FFFFFF"},rectRadius:0.08});
-  s.addShape(pres.shapes.RECTANGLE,{x:8.56,y:0.32,w:0.015,h:0.36,fill:{color:C.lightgray},line:{color:C.lightgray}});
-  if (lp && fs.existsSync(lp)) {
-    try { s.addImage({path:lp,x:7.44,y:0.3,w:0.95,h:0.38,sizing:{type:"contain",w:0.95,h:0.38}}); }
-    catch { s.addText(d.brandName.substring(0,5).toUpperCase(),{x:7.44,y:0.3,w:0.95,h:0.38,fontSize:7.5,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"}); }
-  } else { s.addText(d.brandName.substring(0,5).toUpperCase(),{x:7.44,y:0.3,w:0.95,h:0.38,fontSize:7.5,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"}); }
-  s.addText("🌶 pepper",{x:8.58,y:0.3,w:1.14,h:0.38,fontSize:8,bold:true,color:C.orange,align:"center",valign:"middle",fontFace:"Calibri"});
+  // Pepper logo pill on cover
+  const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:7.8,y:0.28,w:2.0,h:0.46,fill:{color:"FFFFFF"},line:{color:"FFFFFF"},rectRadius:0.08});
+  if (fs.existsSync(pepperLogoPath)) {
+    s.addImage({path:pepperLogoPath,x:7.85,y:0.31,w:1.9,h:0.38,sizing:{type:"contain",w:1.9,h:0.38}});
+  } else {
+    s.addText("pepper",{x:7.85,y:0.31,w:1.9,h:0.38,fontSize:10,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
+  }
   s.addText("GEO AUDIT REPORT",{x:0.5,y:1.08,w:6,h:0.28,fontSize:9,color:C.orange,bold:true,charSpacing:4,fontFace:"Calibri"});
   s.addText(d.brandName,{x:0.5,y:1.38,w:7,h:1.18,fontSize:50,bold:true,color:C.white,fontFace:"Calibri"});
   s.addText(d.domain,{x:0.5,y:2.6,w:5,h:0.38,fontSize:13,color:C.lilac,fontFace:"Calibri"});
@@ -277,10 +225,10 @@ function buildSlide1(pres, d, lp) {
 }
 
 // ─── SLIDE 2: Prompts & Themes ───────────────────────────────────────────────
-function buildSlide2(pres, d, lp) {
+function buildSlide2(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   const tp=d.promptThemes.reduce((a,t)=>a+(t.promptCount||t.prompts?.length||0),0);
-  hdr(s,pres,`We Have Mapped ${tp} Prompts Across ${d.promptThemes.length} Themes`,d.brandName,lp);
+  hdr(s,pres,`We Have Mapped ${tp} Prompts Across ${d.promptThemes.length} Themes`,d.brandName);
   ftr(s,pres,d.brandName,d.domain);
   d.promptThemes.slice(0,9).forEach((t,i)=>{
     const col=i%3,row=Math.floor(i/3),x=0.28+col*3.15,y=1.1+row*0.82;
@@ -288,15 +236,12 @@ function buildSlide2(pres, d, lp) {
     s.addShape(pres.shapes.RECTANGLE,{x,y,w:0.04,h:0.72,fill:{color:C.teal},line:{color:C.teal}});
     s.addText(t.theme,{x:x+0.1,y:y+0.08,w:2.85,h:0.34,fontSize:9.5,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
     s.addText((t.promptCount||t.prompts?.length||0)+" prompts",{x:x+0.1,y:y+0.46,w:2.85,h:0.2,fontSize:8.5,color:C.slate,fontFace:"Calibri"});
-  });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:2.8,y:4.78,w:4.4,h:0.36,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.05});
-  s.addText("Link to the entire list of prompts",{x:2.8,y:4.78,w:4.4,h:0.36,fontSize:10,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
 }
 
 // ─── SLIDE 3: Leaderboard + Competitors ─────────────────────────────────────
-function buildSlide3(pres, d, lp) {
+function buildSlide3(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  hdr(s,pres,"Brand Leaderboard & Competitor Mentions",d.brandName,lp); ftr(s,pres,d.brandName,d.domain);
+  hdr(s,pres,"Brand Leaderboard & Competitor Mentions",d.brandName); ftr(s,pres,d.brandName,d.domain);
   const brands=d.leaderboard;
   if (brands.length>0) {
     const maxM=Math.max(...brands.map(b=>b.mentions),1),barW=1.0,gap=0.55,startX=0.3,cb=4.65,ch=2.6;
@@ -327,9 +272,9 @@ function buildSlide3(pres, d, lp) {
 }
 
 // ─── SLIDE 4: Top Cited Sources ──────────────────────────────────────────────
-function buildSlide4(pres, d, lp) {
+function buildSlide4(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  hdr(s,pres,"Top Cited Sources (Category vs Us)",d.brandName,lp); ftr(s,pres,d.brandName,d.domain);
+  hdr(s,pres,"Top Cited Sources (Category vs Us)",d.brandName); ftr(s,pres,d.brandName,d.domain);
   const domains=d.domainCitations.slice(0,9);
   s.addShape(pres.shapes.RECTANGLE,{x:0.25,y:1.08,w:4.4,h:0.28,fill:{color:C.navy},line:{color:C.navy}});
   [["Domain",0.35],["Pages",2.8],["Responses",3.65]].forEach(([h,x])=>s.addText(h,{x,y:1.1,w:1.1,h:0.24,fontSize:8,bold:true,color:C.white,fontFace:"Calibri"}));
@@ -356,9 +301,9 @@ function buildSlide4(pres, d, lp) {
 }
 
 // ─── SLIDE 5: Competitor Visibility Matrix ───────────────────────────────────
-function buildSlide5(pres, d, lp) {
+function buildSlide5(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  hdr(s,pres,"Theme Benchmarks (% Visibility across Competitors)",d.brandName,lp); ftr(s,pres,d.brandName,d.domain);
+  hdr(s,pres,"Theme Benchmarks (% Visibility across Competitors)",d.brandName); ftr(s,pres,d.brandName,d.domain);
   const matrix=d.competitorVisibilityMatrix;
   if (!matrix||matrix.length===0){s.addText("No competitor visibility matrix data available.",{x:0.5,y:2.5,w:9,h:0.5,fontSize:12,color:C.slate,align:"center",fontFace:"Calibri"});return;}
   const compNames=[];
@@ -386,9 +331,9 @@ function buildSlide5(pres, d, lp) {
 }
 
 // ─── SLIDE 6: Metric Definitions ─────────────────────────────────────────────
-function buildSlide6(pres, d, lp) {
+function buildSlide6(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  hdr(s,pres,"What does each of these mean?",d.brandName,lp); ftr(s,pres,d.brandName,d.domain);
+  hdr(s,pres,"What does each of these mean?",d.brandName); ftr(s,pres,d.brandName,d.domain);
   [{term:"Brand Mentions",body:"Number of times your brand appeared in AI answers out of total tracked prompts"},
    {term:"Share of Voice",body:"Percentage of your brand mentions compared to all total brand mentions"},
    {term:"Brand Position",body:"Average position of your brand in AI answers"},
@@ -406,9 +351,9 @@ function buildSlide6(pres, d, lp) {
 }
 
 // ─── SLIDE 7: Platform mentions table ────────────────────────────────────────
-function buildSlide7(pres, d, lp) {
+function buildSlide7(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  hdr(s,pres,d.brandName+" Mentions by AI Platform",d.brandName,lp); ftr(s,pres,d.brandName,d.domain);
+  hdr(s,pres,d.brandName+" Mentions by AI Platform",d.brandName); ftr(s,pres,d.brandName,d.domain);
   [{v:String(d.totalMentions),l:"Total Brand Mentions"},{v:String(d.totalCitations),l:"Total Domain Citations"},{v:d.avgBrandCoverage,l:"Avg Brand Coverage"},{v:d.avgDomainCoverage,l:"Avg Domain Coverage"}].forEach((k,i)=>{
     const x=0.25+i*2.42;
     s.addShape(pres.shapes.RECTANGLE,{x,y:1.08,w:2.3,h:0.72,fill:{color:C.white},line:{color:C.lightgray},shadow:makeShadow()});
@@ -437,9 +382,9 @@ function buildSlide7(pres, d, lp) {
 }
 
 // ─── SLIDE 8: Brand Visibility by Platform ───────────────────────────────────
-function buildSlide8(pres, d, lp) {
+function buildSlide8(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  hdr(s,pres,d.brandName+" Brand Visibility by Platform & Theme",d.brandName,lp); ftr(s,pres,d.brandName,d.domain);
+  hdr(s,pres,d.brandName+" Brand Visibility by Platform & Theme",d.brandName); ftr(s,pres,d.brandName,d.domain);
   const rows=d.brandVisibilityByPlatform;
   if(!rows||rows.length===0){s.addText("No platform visibility data available.",{x:0.5,y:2.8,w:9,h:0.5,fontSize:12,color:C.slate,align:"center",fontFace:"Calibri"});return;}
   const platNames=Object.keys(rows[0]).filter(k=>k!=='theme'),themeColW=3.2,dataColW=(9.5-themeColW)/platNames.length,startX=0.25,headerY=1.08,rowH=0.35;
@@ -467,9 +412,9 @@ function buildSlide8(pres, d, lp) {
 // STATIC SLIDES 12–18
 // ═══════════════════════════════════════════════════════════════════════════
 
-function buildSlide12(pres, d, lp) {
+function buildSlide12(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  staticHdr(s,pres,"The Approach For Solving GEO",d.brandName,lp);
+  staticHdr(s,pres,"The Approach For Solving GEO",d.brandName);
   // Circle diagram
   s.addShape(pres.shapes.OVAL,{x:3.1,y:0.9,w:3.6,h:3.6,fill:{color:C.lightgray},line:{color:"CCCCDD",pt:1}});
   s.addShape(pres.shapes.OVAL,{x:3.5,y:1.3,w:2.8,h:2.8,fill:{color:C.white},line:{color:C.white}});
@@ -500,9 +445,9 @@ function buildSlide12(pres, d, lp) {
   });
 }
 
-function buildSlide13(pres, d, lp) {
+function buildSlide13(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  staticHdr(s,pres,"Reverse Engineering How LLMs Index Content",d.brandName,lp);
+  staticHdr(s,pres,"Reverse Engineering How LLMs Index Content",d.brandName);
   s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:0.7,w:9.4,h:0.66,fill:{color:"EEF0FF"},line:{color:C.lightgray},rectRadius:0.08});
   s.addText("LLM Retrieval Score",{x:0.5,y:0.76,w:2.9,h:0.52,fontSize:13,bold:true,italic:true,color:C.navy,fontFace:"Calibri"});
   s.addText("∝",{x:3.4,y:0.76,w:0.5,h:0.52,fontSize:18,color:C.navy,align:"center",fontFace:"Calibri"});
@@ -523,9 +468,9 @@ function buildSlide13(pres, d, lp) {
   });
 }
 
-function buildSlide14(pres, d, lp) {
+function buildSlide14(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  staticHdr(s,pres,"The Content Strategy : Source Weightages by LLMs",d.brandName,lp);
+  staticHdr(s,pres,"The Content Strategy : Source Weightages by LLMs",d.brandName);
   const plats=[{name:"ChatGPT",color:"F0EEFF",hc:C.purple},{name:"Gemini",color:"EAF4FF",hc:"4285F4"},{name:"perplexity",color:"F5F5F5",hc:"6C6C6C"},{name:"Claude",color:"FFF3EE",hc:C.orange}];
   const colW14=1.9,sx14=2.1,hy14=0.72;
   s.addShape(pres.shapes.RECTANGLE,{x:0.28,y:hy14,w:1.78,h:0.42,fill:{color:"D8F0F0"},line:{color:C.teal}});
@@ -553,9 +498,9 @@ function buildSlide14(pres, d, lp) {
   });
 }
 
-function buildSlide15(pres, d, lp) {
+function buildSlide15(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  staticHdr(s,pres,"The Content Strategy : Topical Authority",d.brandName,lp);
+  staticHdr(s,pres,"The Content Strategy : Topical Authority",d.brandName);
   s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:0.68,w:9.4,h:0.62,fill:{color:"EEF0FF"},line:{color:C.lightgray},rectRadius:0.08});
   s.addText("LLM Recommendations",{x:0.5,y:0.74,w:3.2,h:0.48,fontSize:12,bold:true,italic:true,color:C.navy,fontFace:"Calibri"});
   s.addText("∝",{x:3.7,y:0.74,w:0.5,h:0.48,fontSize:16,color:C.navy,align:"center",fontFace:"Calibri"});
@@ -590,9 +535,9 @@ function buildSlide15(pres, d, lp) {
   s.addText("The key reason smaller publishers/brands do well on LLM queries is their trust-signalling coverage",{x:7.72,y:2.82,w:2.0,h:0.68,fontSize:8,color:C.darkgray,fontFace:"Calibri",wrap:true});
 }
 
-function buildSlide16(pres, d, lp) {
+function buildSlide16(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  staticHdr(s,pres,"Strategy to Dominate Generative Search (GEO)",d.brandName,lp);
+  staticHdr(s,pres,"Strategy to Dominate Generative Search (GEO)",d.brandName);
   const steps=[{n:"1.",title:"Curate Prompt List",body:"Curate a list of relevant prompts",icon:"📋"},{n:"2.",title:"Multi LLM Analysis",body:"Analyze the responses from different LLMs",icon:"🖥"},{n:"3.",title:"Citation & Brand Mention Audit",body:"Review of cited URLs & brand mentions",icon:"🔍"},{n:"4.",title:"Page Creation & Optimization",body:"Identifying pages to be created & optimized",icon:"🎯"},{n:"5.",title:"Community Visibility",body:"Access your presence of reddit, Quora forums",icon:"💬"}];
   const bW=1.68,bH=1.62,bY=1.62,sx16=0.28;
   steps.forEach((step,i)=>{
@@ -609,9 +554,9 @@ function buildSlide16(pres, d, lp) {
   s.addText("Create new pages, update existing pages, implement schemas, and community replies and re-run the prompt set monthly to gauge lift and uncover new topical gaps.",{x:2.9,y:3.52,w:6.7,h:0.56,fontSize:9,color:C.darkgray,fontFace:"Calibri",wrap:true});
 }
 
-function buildSlide17(pres, d, lp) {
+function buildSlide17(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  staticHdr(s,pres,"Here, is the customised content strategy table for you!",d.brandName,lp);
+  staticHdr(s,pres,"Here, is the customised content strategy table for you!",d.brandName);
   const hX17=[0.25,1.48,2.52,7.1,8.12],hW17=[1.2,1.02,4.55,0.98,1.6];
   s.addShape(pres.shapes.RECTANGLE,{x:0.25,y:0.65,w:9.5,h:0.34,fill:{color:C.purple},line:{color:C.purple}});
   [["Source Type",0],["Estimated Weight",1],["Notes",2],["% Weightage",3],["Relevant Examples",4]].forEach(([h,i])=>s.addText(h,{x:hX17[i]+0.04,y:0.68,w:hW17[i]-0.06,h:0.28,fontSize:7,bold:true,color:C.white,fontFace:"Calibri",align:"center",wrap:true}));
@@ -634,9 +579,9 @@ function buildSlide17(pres, d, lp) {
   s.addText("Note: The weightage percentage is a relative effort guide. If you're putting X effort on a source with 2% weight, then a source with 8% weight deserves 4X effort. Prioritize accordingly.",{x:0.25,y:4.85,w:9.5,h:0.32,fontSize:7,italic:true,color:C.slate,fontFace:"Calibri",wrap:true});
 }
 
-function buildSlide18(pres, d, lp) {
+function buildSlide18(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
-  logoPill(s,pres,d.brandName,lp);
+  logoPill(s, pres);
   s.addText("Do you think this was helpful and want to dive deeper?",{x:0.35,y:0.55,w:9.3,h:1.5,fontSize:32,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
   s.addText("Reach us at +14157545133",{x:0.35,y:2.3,w:6,h:0.38,fontSize:14,color:C.darkgray,fontFace:"Calibri"});
   s.addText("or write to us at kishan@peppercontent.io",{x:0.35,y:2.68,w:6,h:0.38,fontSize:14,color:C.darkgray,fontFace:"Calibri"});
@@ -646,24 +591,24 @@ function buildSlide18(pres, d, lp) {
 }
 
 // ─── STEP 4: Build PPTX ───────────────────────────────────────────────────────
-function buildPPTX(data, brandLogoPath, outputPath) {
+function buildPPTX(data, outputPath) {
   const pres=new pptxgen();
   pres.layout="LAYOUT_16x9"; pres.title=data.brandName+" GEO Audit — Atlas"; pres.author="Pepper.inc Atlas";
-  buildSlide1(pres,data,brandLogoPath);
-  buildSlide2(pres,data,brandLogoPath);
-  buildSlide3(pres,data,brandLogoPath);
-  buildSlide4(pres,data,brandLogoPath);
-  buildSlide5(pres,data,brandLogoPath);
-  buildSlide6(pres,data,brandLogoPath);
-  buildSlide7(pres,data,brandLogoPath);
-  buildSlide8(pres,data,brandLogoPath);
-  buildSlide12(pres,data,brandLogoPath);
-  buildSlide13(pres,data,brandLogoPath);
-  buildSlide14(pres,data,brandLogoPath);
-  buildSlide15(pres,data,brandLogoPath);
-  buildSlide16(pres,data,brandLogoPath);
-  buildSlide17(pres,data,brandLogoPath);
-  buildSlide18(pres,data,brandLogoPath);
+  buildSlide1(pres,data);
+  buildSlide2(pres,data);
+  buildSlide3(pres,data);
+  buildSlide4(pres,data);
+  buildSlide5(pres,data);
+  buildSlide6(pres,data);
+  buildSlide7(pres,data);
+  buildSlide8(pres,data);
+  buildSlide12(pres,data);
+  buildSlide13(pres,data);
+  buildSlide14(pres,data);
+  buildSlide15(pres,data);
+  buildSlide16(pres,data);
+  buildSlide17(pres,data);
+  buildSlide18(pres,data);
   pres.writeFile({ fileName:outputPath });
   console.log("✅ PPTX written:", outputPath, "(15 slides)");
 }
@@ -678,9 +623,7 @@ app.post("/generate", async (req, res) => {
     const rawData=await extractData(screenshots);
     const data=normalizeData(rawData);
     console.log("\n🖼  Fetching brand logo for:", data.brandName, "/", data.domain);
-    const brandLogoPath=await fetchBrandLogo(data.brandName, data.domain);
-    buildPPTX(data, brandLogoPath, pptxOut);
-    if (brandLogoPath && brandLogoPath.startsWith(TMP)) { try{fs.unlinkSync(brandLogoPath);}catch{} }
+    buildPPTX(data, pptxOut);
     await new Promise(r=>setTimeout(r,1000));
     console.log("📄 Converting to PDF...");
     execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout:60000 });
