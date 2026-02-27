@@ -169,11 +169,11 @@ function normalizeData(raw) {
 // ─── PPTX layout helpers ─────────────────────────────────────────────────────
 function logoPill(s, pres) {
   const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:8.1,y:0.06,w:1.75,h:0.38, fill:{color:C.white}, line:{color:C.lightgray,pt:1}, rectRadius:0.06, shadow:makeShadow() });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:9.05,y:0.06,w:0.80,h:0.20, fill:{color:C.white}, line:{color:C.lightgray,pt:1}, rectRadius:0.06, shadow:makeShadow() });
   if (fs.existsSync(pepperLogoPath)) {
-    s.addImage({ path:pepperLogoPath, x:8.15,y:0.09,w:1.65,h:0.3, sizing:{type:"contain",w:1.65,h:0.3} });
+    s.addImage({ path:pepperLogoPath, x:9.08,y:0.08,w:0.70,h:0.14, sizing:{type:"contain",w:0.70,h:0.14} });
   } else {
-    s.addText("pepper", { x:8.15,y:0.09,w:1.65,h:0.3, fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri" });
+    s.addText("pepper", { x:9.08,y:0.08,w:0.70,h:0.14, fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri" });
   }
 }
 
@@ -206,11 +206,11 @@ function buildSlide1(pres, d) {
   s.addText("by pepper.inc",{x:1.63,y:0.44,w:1.5,h:0.26,fontSize:8,color:C.lilac,fontFace:"Calibri"});
   // Pepper logo pill on cover
   const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:8.2,y:0.3,w:1.4,h:0.36,fill:{color:"FFFFFF"},line:{color:"FFFFFF"},rectRadius:0.08});
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:9.1,y:0.3,w:0.70,h:0.18,fill:{color:"FFFFFF"},line:{color:"FFFFFF"},rectRadius:0.08});
   if (fs.existsSync(pepperLogoPath)) {
-    s.addImage({path:pepperLogoPath,x:8.25,y:0.33,w:1.3,h:0.28,sizing:{type:"contain",w:1.3,h:0.28}});
+    s.addImage({path:pepperLogoPath,x:9.13,y:0.32,w:0.65,h:0.14,sizing:{type:"contain",w:0.65,h:0.14}});
   } else {
-    s.addText("pepper",{x:8.25,y:0.33,w:1.3,h:0.28,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addText("pepper",{x:9.13,y:0.32,w:0.65,h:0.14,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
   }
   s.addText("GEO AUDIT REPORT",{x:0.5,y:1.08,w:6,h:0.28,fontSize:9,color:C.orange,bold:true,charSpacing:4,fontFace:"Calibri"});
   s.addText(d.brandName,{x:0.5,y:1.38,w:7,h:1.18,fontSize:50,bold:true,color:C.white,fontFace:"Calibri"});
