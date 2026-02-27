@@ -502,8 +502,7 @@
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const cd = response.headers.get("content-disposition") || ""; const name = (cd.match(/filename="?([^";
-]+)"?/) || [])[1] || "GEO-report.pdf";
+      const cd = response.headers.get("content-disposition") || ""; const name = (cd.match(/filename="?([^";]+)"?/) || [])[1] || "GEO-report.pdf";
       a.href = blobUrl;
       a.download = name;
       document.body.appendChild(a);
