@@ -4,8 +4,6 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const JSZip = require("jszip");
-const TEMPLATE_PATH = path.join(__dirname, "public", "templates", "Template Slides.pptx");
 
 const app = express();
 app.use(express.json());
@@ -218,7 +216,11 @@ function ftr(s, pres, brand, domain) {
     s.addText(brand+" · "+domain+" · GEO Audit by Atlas / Pepper.inc", { x:0.3,y:5.43,w:9.4,h:0.18, fontSize:6.5,color:"AAAACC",fontFace:"Calibri" });
 }
 
-
+function staticHdr(s, pres, title, brandName) {
+    logoPill(s, pres);
+    s.addText(title, { x:0.35,y:0.12,w:7.15,h:0.42, fontSize:18,bold:true,color:C.navy,fontFace:"Calibri" });
+    s.addShape(pres.shapes.RECTANGLE, { x:0.35,y:0.56,w:3.5,h:0.025, fill:{color:C.navy}, line:{color:C.navy} });
+}
 
 // ─── SLIDE 1: Cover ────────────────────────────────────────────────────────
 function buildSlide1(pres, d) {
@@ -438,212 +440,211 @@ function buildSlide8(pres, d) {
     s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.",{x:0.3,y:5.22,w:9.4,h:0.16,fontSize:7,italic:true,color:C.slate,align:"center",fontFace:"Calibri"});
 }
 
-// ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
-function buildPPTX(data, outputPath) {
-  const pres=new pptxgen();
-  pres.layout="LAYOUT_16x9";
-  pres.title=data.brandName+" GEO Audit \u2014 Atlas";
-  pres.author="Pepper.inc Atlas";
-  buildSlide1(pres,data);
-  buildSlide2(pres,data);
-  buildSlide3(pres,data);
-  buildSlide4(pres,data);
-  buildSlide5(pres,data);
-  buildSlide6(pres,data);
-  buildSlide7(pres,data);
-  buildSlide8(pres,data);
-  pres.writeFile({ fileName:outputPath });
-  console.log("\u2705 PPTX written:", outputPath, "(8 dynamic slides)");
+// ═══════════════════════════════════════════════════════════════════════════
+// STATIC SLIDES 12–18
+// ═══════════════════════════════════════════════════════════════════════════
+function buildSlide12(pres, d) {
+    const s=pres.addSlide(); s.background={color:C.white};
+    staticHdr(s,pres,"The Approach For Solving GEO",d.brandName);
+    s.addShape(pres.shapes.OVAL,{x:3.1,y:0.9,w:3.6,h:3.6,fill:{color:C.lightgray},line:{color:"CCCCDD",pt:1}});
+    s.addShape(pres.shapes.OVAL,{x:3.5,y:1.3,w:2.8,h:2.8,fill:{color:C.white},line:{color:C.white}});
+    s.addShape(pres.shapes.OVAL,{x:3.72,y:1.52,w:2.36,h:2.36,fill:{color:"E8E4FF"},line:{color:C.violet,pt:1}});
+    s.addShape(pres.shapes.OVAL,{x:4.0,y:1.8,w:1.8,h:1.8,fill:{color:C.white},line:{color:C.white}});
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:4.08,y:2.2,w:1.64,h:1.0,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.08});
+    s.addText("Pepper's GEO\nApproach",{x:4.08,y:2.2,w:1.64,h:1.0,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addText("Visibility",{x:0.28,y:1.05,w:2.75,h:0.36,fontSize:16,bold:true,color:C.navy,fontFace:"Calibri"});
+    s.addText("Can LLMs see your content?",{x:0.28,y:1.4,w:2.75,h:0.28,fontSize:10,italic:true,color:C.purple,fontFace:"Calibri"});
+    ["We audit if you're being cited across AI Search (ChatGPT, Perplexity, SGE)","We identify which competitors are winning those spots and why","We check if your URLs are indexable, link-worthy, and retrievable"].forEach((b,i)=>{
+          s.addShape(pres.shapes.OVAL,{x:0.28,y:1.76+i*0.46,w:0.1,h:0.1,fill:{color:C.navy},line:{color:C.navy}});
+          s.addText(b,{x:0.44,y:1.72+i*0.46,w:2.58,h:0.44,fontSize:7.5,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    });
+    s.addText("Citability",{x:6.9,y:1.0,w:2.85,h:0.36,fontSize:16,bold:true,color:C.navy,fontFace:"Calibri"});
+    s.addText("Can LLMs trust your content?",{x:6.9,y:1.34,w:2.85,h:0.28,fontSize:10,italic:true,color:C.purple,fontFace:"Calibri"});
+    ["We rewrite content to include expert quotes, references, structured data","We improve source credibility through media presence, high-authority citations, and entity recognition","We restructure pages to be chunkable and retrievable"].forEach((b,i)=>{
+          s.addShape(pres.shapes.OVAL,{x:6.9,y:1.7+i*0.42,w:0.1,h:0.1,fill:{color:C.navy},line:{color:C.navy}});
+          s.addText(b,{x:7.06,y:1.66+i*0.42,w:2.65,h:0.4,fontSize:7.5,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    });
+    s.addText("Retrievability:",{x:6.9,y:3.3,w:2.85,h:0.34,fontSize:16,bold:true,color:C.navy,fontFace:"Calibri"});
+    s.addText("Can LLMs use your content to answer future questions?",{x:6.9,y:3.62,w:2.85,h:0.44,fontSize:9,italic:true,color:C.purple,fontFace:"Calibri",wrap:true});
+    ["We chunk and tag your content to feed RAG systems better","We add LLM-readable markup and context layering (FAQs, comparisons, summaries)","We monitor which prompts lead to brand visibility and close the loop"].forEach((b,i)=>{
+          s.addShape(pres.shapes.OVAL,{x:6.9,y:4.1+i*0.38,w:0.1,h:0.1,fill:{color:C.navy},line:{color:C.navy}});
+          s.addText(b,{x:7.06,y:4.06+i*0.38,w:2.65,h:0.36,fontSize:7.5,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    });
 }
 
-// ─── STEP 3b: Merge dynamic PPTX with template slides + inject Pepper logo ──
-async function mergeWithTemplate(dynamicPptxPath) {
-  if (!fs.existsSync(TEMPLATE_PATH)) {
-    console.log("\u26A0\uFE0F Template not found at", TEMPLATE_PATH, "- skipping merge");
-    return;
-  }
-  console.log("\u{1F4CE} Merging template slides from:", TEMPLATE_PATH);
+function buildSlide13(pres, d) {
+    const s=pres.addSlide(); s.background={color:C.white};
+    staticHdr(s,pres,"Reverse Engineering How LLMs Index Content",d.brandName);
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:0.7,w:9.4,h:0.66,fill:{color:"EEF0FF"},line:{color:C.lightgray},rectRadius:0.08});
+    s.addText("LLM Retrieval Score",{x:0.5,y:0.76,w:2.9,h:0.52,fontSize:13,bold:true,italic:true,color:C.navy,fontFace:"Calibri"});
+    s.addText("\u221D",{x:3.4,y:0.76,w:0.5,h:0.52,fontSize:18,color:C.navy,align:"center",fontFace:"Calibri"});
+    s.addText("(Chunking \u00D7 Structure \u00D7 Schema \u00D7 Source Weight \u00D7 Trust Signals)",{x:3.9,y:0.76,w:5.6,h:0.52,fontSize:12,bold:true,italic:true,color:C.navy,fontFace:"Calibri",wrap:true});
+    const hX13=[0.3,1.72,5.74],hW13=[1.4,4.0,3.82];
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:1.5,w:9.4,h:0.32,fill:{color:C.navy},line:{color:C.navy}});
+    [["Variable","What It Means","How Pepper Optimizes It"]].flat().forEach((h,i)=>s.addText(h,{x:hX13[i]+0.06,y:1.53,w:hW13[i]-0.1,h:0.26,fontSize:8.5,bold:true,italic:true,color:C.white,fontFace:"Calibri"}));
+    [["Chunking","Atomic 2-4 sentence blocks ideal for embedding + summarization","We rewrite long-form into discrete semantic units"],
+        ["Structure","Use of TL;DRs, bullets, lists, Q&A formatting","Content is formatted with high semantic clarity"],
+        ["Schema","Machine-readable metadata (FAQPage, HowTo, Product)","Implemented across product pages, glossaries, and help docs"],
+        ["Source Weight","LLM preference hierarchy (Wikipedia > PDF > Help Docs > Blogs > Social)","Content is distributed into high-weight surfaces LLMs trust"],
+        ["Trust Signals","Presence of citations, statistics, interlinking, and cross-source agreement","We embed outbound and inbound credibility into every content artifact"],
+       ].forEach((row,ri)=>{
+             const y=1.84+ri*0.58,bg=ri%2===0?C.white:C.offwhite;
+             s.addShape(pres.shapes.RECTANGLE,{x:0.3,y,w:9.4,h:0.56,fill:{color:bg},line:{color:C.lightgray}});
+             [1.72,5.74].forEach(dx=>s.addShape(pres.shapes.RECTANGLE,{x:dx,y,w:0.015,h:0.56,fill:{color:C.lightgray},line:{color:C.lightgray}}));
+             row.forEach((cell,ci)=>s.addText(cell,{x:hX13[ci]+0.06,y:y+0.08,w:hW13[ci]-0.12,h:0.42,fontSize:7.5,italic:true,color:C.darkgray,align:"center",fontFace:"Calibri",wrap:true}));
+       });
+}
 
-  const dynBuf = fs.readFileSync(dynamicPptxPath);
-  const tplBuf = fs.readFileSync(TEMPLATE_PATH);
+function buildSlide14(pres, d) {
+    const s=pres.addSlide(); s.background={color:C.white};
+    staticHdr(s,pres,"The Content Strategy : Source Weightages by LLMs",d.brandName);
+    const plats=[{name:"ChatGPT",color:"F0EEFF",hc:C.purple},{name:"Gemini",color:"EAF4FF",hc:"4285F4"},{name:"perplexity",color:"F5F5F5",hc:"6C6C6C"},{name:"Claude",color:"FFF3EE",hc:C.orange}];
+    const colW14=1.9,sx14=2.1,hy14=0.72;
+    s.addShape(pres.shapes.RECTANGLE,{x:0.28,y:hy14,w:1.78,h:0.42,fill:{color:"D8F0F0"},line:{color:C.teal}});
+    s.addText("FACTORS",{x:0.28,y:hy14,w:1.78,h:0.42,fontSize:9,bold:true,color:C.darkgray,align:"center",valign:"middle",fontFace:"Calibri"});
+    plats.forEach((p,i)=>{
+          const x=sx14+i*colW14;
+          s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:x+0.04,y:hy14-0.04,w:colW14-0.08,h:0.5,fill:{color:p.color},line:{color:p.hc},rectRadius:0.12});
+          s.addText(p.name,{x:x+0.04,y:hy14-0.04,w:colW14-0.08,h:0.5,fontSize:10,bold:true,color:p.hc,align:"center",valign:"middle",fontFace:"Calibri"});
+    });
+    [["Authoritative List Mentions (e.g. Top CRMs on G2, Best VPNs on TechRadar)",["✓ (41%)","✓ (49%)","✓ (64%)","✗"]],
+        ["Awards / Accreditations (e.g. Gartner MQ, Inc. 5000 Badge)",["✓ (18%)","✓ (15%)","✓ (5%)","✓ (19%)"]],
+        ["Online Reviews (e.g. Google Reviews, TrustPilot, Capterra ratings)",["✓ (16%)","✓ (13%)","✓ (31%)","✗"]],
+        ["Customer Examples / Usage Data (e.g. Used by IBM, Powered by Salesforce)",["✓ (14%)","✗","✗","✓ (13%)"]],
+        ["Social Sentiment (e.g. Reddit threads, Quora/Twitter buzz)",["✓ (11%)","✗","✗","✗"]],
+        ["Local Reviews (e.g. Google Business Profile, Yelp)",["✗","✓ (Local)","✓ (Local)","✗"]],
+        ["Traditional Directories (e.g. NY Times, Bloomberg, Hoovers)",["✗","✗","✗","✓ (68%)"]],
+       ].forEach(([factor,vals],ri)=>{
+             const y=hy14+0.46+ri*0.46,bg=ri%2===0?C.white:C.offwhite;
+             s.addShape(pres.shapes.RECTANGLE,{x:0.28,y,w:9.44,h:0.44,fill:{color:bg},line:{color:C.lightgray}});
+             s.addText(factor,{x:0.34,y:y+0.04,w:1.7,h:0.38,fontSize:6.5,color:C.darkgray,fontFace:"Calibri",wrap:true,align:"center"});
+             vals.forEach((v,vi)=>{
+                     const x=sx14+vi*colW14;
+                     s.addText(v,{x:x+0.04,y:y+0.1,w:colW14-0.08,h:0.26,fontSize:9,bold:true,color:v==="\u2717"?"E03030":"1A7A40",align:"center",fontFace:"Calibri"});
+             });
+       });
+}
 
-  const dynZip = await JSZip.loadAsync(dynBuf);
-  const tplZip = await JSZip.loadAsync(tplBuf);
+function buildSlide15(pres, d) {
+    const s=pres.addSlide(); s.background={color:C.white};
+    staticHdr(s,pres,"The Content Strategy : Topical Authority",d.brandName);
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:0.68,w:9.4,h:0.62,fill:{color:"EEF0FF"},line:{color:C.lightgray},rectRadius:0.08});
+    s.addText("LLM Recommendations",{x:0.5,y:0.74,w:3.2,h:0.48,fontSize:12,bold:true,italic:true,color:C.navy,fontFace:"Calibri"});
+    s.addText("\u221D",{x:3.7,y:0.74,w:0.5,h:0.48,fontSize:16,color:C.navy,align:"center",fontFace:"Calibri"});
+    s.addText("RRF Score = \u03A3 [1 / (60 + SERP position)]",{x:4.2,y:0.74,w:5.3,h:0.48,fontSize:12,bold:true,italic:true,color:C.navy,fontFace:"Calibri",wrap:true});
+    s.addText("Illustration",{x:0.3,y:1.4,w:2,h:0.28,fontSize:10,bold:true,color:C.navy,fontFace:"Calibri"});
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:1.72,w:0.8,h:0.28,fill:{color:C.navy},line:{color:C.navy},rectRadius:0.05});
+    s.addText("Brand A",{x:0.3,y:1.72,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+    const hX15=[0.3,2.05,2.7],hW15=[1.72,0.62,0.9];
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.04,w:3.28,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
+    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15[i]+0.04,y:2.07,w:hW15[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.36,w:3.28,h:0.3,fill:{color:C.offwhite},line:{color:C.lightgray}});
+    s.addText("Best Credit Card for Travellers",{x:0.36,y:2.39,w:1.66,h:0.24,fontSize:7.5,color:C.darkgray,fontFace:"Calibri"});
+    s.addText("#1",{x:2.09,y:2.39,w:0.54,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+    s.addText("0.0164",{x:2.74,y:2.39,w:0.8,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:2.76,w:2.4,h:1.5,fill:{color:"F0EEFF"},line:{color:C.lightgray},rectRadius:0.08});
+    [["CHASE",C.navy],["BANK OF AMERICA",C.orange],["PNC","6A0DAD"]].forEach(([b,c],i)=>s.addText(b,{x:0.4,y:2.88+i*0.44,w:2.2,h:0.36,fontSize:10,bold:true,color:c,fontFace:"Calibri"}));
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:3.8,y:1.72,w:0.8,h:0.28,fill:{color:C.teal},line:{color:C.teal},rectRadius:0.05});
+    s.addText("Brand B",{x:3.8,y:1.72,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+    const hX15b=[3.8,5.6,6.3],hW15b=[1.78,0.68,0.88];
+    s.addShape(pres.shapes.RECTANGLE,{x:3.8,y:2.04,w:3.38,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
+    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15b[i]+0.04,y:2.07,w:hW15b[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
+    [["Best Credit Card for Travellers","#4","0.0156"],["Travel On A Budget","#5","0.0154"],["USe Reward Points for Flights","#6","0.0152"],["Cheapest Hotel Tricks","#4","0.0156"],["Eligibility for Credit Card","#7","0.0149"],["Total","","0.0767"]].forEach((r,ri)=>{
+          const y=2.36+ri*0.28,bg=ri%2===0?C.offwhite:C.white;
+          s.addShape(pres.shapes.RECTANGLE,{x:3.8,y,w:3.38,h:0.28,fill:{color:bg},line:{color:C.lightgray}});
+          s.addText(r[0],{x:3.86,y:y+0.04,w:1.7,h:0.22,fontSize:6.5,color:C.darkgray,fontFace:"Calibri"});
+          s.addText(r[1],{x:5.64,y:y+0.04,w:0.6,h:0.22,fontSize:6.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+          s.addText(r[2],{x:6.34,y:y+0.04,w:0.8,h:0.22,fontSize:6.5,bold:ri===5,color:ri===5?C.navy:C.darkgray,align:"center",fontFace:"Calibri"});
+    });
+    s.addShape(pres.shapes.OVAL,{x:7.55,y:2.04,w:0.12,h:0.12,fill:{color:C.navy},line:{color:C.navy}});
+    s.addText("Building Topical Authority still tops the content priority, with the relevant technical optimisation for each URL",{x:7.72,y:1.98,w:2.0,h:0.68,fontSize:8,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    s.addShape(pres.shapes.OVAL,{x:7.55,y:2.88,w:0.12,h:0.12,fill:{color:C.navy},line:{color:C.navy}});
+    s.addText("The key reason smaller publishers/brands do well on LLM queries is their trust-signalling coverage",{x:7.72,y:2.82,w:2.0,h:0.68,fontSize:8,color:C.darkgray,fontFace:"Calibri",wrap:true});
+        // ── Curly-brace connectors ──
+        // Brand A left brace: spans from Brand A pill top to brand-logos bottom
+        s.addText("}", { x:-0.05,y:1.68,w:0.45,h:2.62, fontSize:80,color:C.slate,fontFace:"Calibri",align:"center",valign:"middle" });
+        // Brand B right brace: spans from Brand B table top to bottom of last row
+        s.addText("{", { x:7.2,y:1.68,w:0.45,h:3.08, fontSize:95,color:C.slate,fontFace:"Calibri",align:"center",valign:"middle" });
+}
 
-  /* ── count existing dynamic slides ── */
-  let dynSlideCount = 0;
-  while (dynZip.file("ppt/slides/slide" + (dynSlideCount + 1) + ".xml")) dynSlideCount++;
-  console.log("  Dynamic slides found:", dynSlideCount);
+function buildSlide16(pres, d) {
+    const s=pres.addSlide(); s.background={color:C.white};
+    staticHdr(s,pres,"Strategy to Dominate Generative Search (GEO)",d.brandName);
+    const steps=[{n:"1.",title:"Curate Prompt List",body:"Curate a list of relevant prompts",icon:"\u{1F4CB}"},{n:"2.",title:"Multi LLM Analysis",body:"Analyze the responses from different LLMs",icon:"\u{1F5A5}"},{n:"3.",title:"Citation & Brand Mention Audit",body:"Review of cited URLs & brand mentions",icon:"\u{1F50D}"},{n:"4.",title:"Page Creation & Optimization",body:"Identifying pages to be created & optimized",icon:"\u{1F3AF}"},{n:"5.",title:"Community Visibility",body:"Access your presence of reddit, Quora forums",icon:"\u{1F4AC}"}];
+    const bW=1.68,bH=1.62,bY=1.62,sx16=0.28;
+    steps.forEach((step,i)=>{
+          const x=sx16+i*(bW+0.1),isH=i===1;
+          s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x,y:bY,w:bW,h:bH,fill:{color:C.white},line:{color:isH?C.navy:C.teal,pt:isH?2:1.5},rectRadius:0.12});
+          s.addText(step.icon,{x,y:bY-0.44,w:bW,h:0.4,fontSize:20,align:"center"});
+          s.addText(step.n,{x:x+0.1,y:bY+0.1,w:bW-0.2,h:0.28,fontSize:9.5,bold:true,color:C.navy,align:"center",fontFace:"Calibri"});
+          s.addText(step.title,{x:x+0.08,y:bY+0.34,w:bW-0.16,h:0.42,fontSize:9,bold:true,color:C.navy,align:"center",fontFace:"Calibri",wrap:true});
+          s.addText(step.body,{x:x+0.08,y:bY+0.8,w:bW-0.16,h:0.72,fontSize:7.5,italic:true,color:C.slate,align:"center",fontFace:"Calibri",wrap:true});
+          if(i<4)s.addShape(pres.shapes.RECTANGLE,{x:x+bW,y:bY+bH/2-0.04,w:0.1,h:0.08,fill:{color:C.navy},line:{color:C.navy}});
+    });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.28,y:3.42,w:9.44,h:0.78,fill:{color:C.white},line:{color:C.navy,pt:2},rectRadius:0.1});
+    s.addText("6. Implement & Iterate",{x:0.42,y:3.52,w:2.5,h:0.3,fontSize:10,bold:true,color:C.navy,fontFace:"Calibri"});
+    s.addText("Create new pages, update existing pages, implement schemas, and community replies and re-run the prompt set monthly to gauge lift and uncover new topical gaps.",{x:2.9,y:3.52,w:6.7,h:0.56,fontSize:9,color:C.darkgray,fontFace:"Calibri",wrap:true});
+}
 
-  /* ── count template slides ── */
-  let tplSlideCount = 0;
-  while (tplZip.file("ppt/slides/slide" + (tplSlideCount + 1) + ".xml")) tplSlideCount++;
-  console.log("  Template slides found:", tplSlideCount);
+function buildSlide17(pres, d) {
+    const s=pres.addSlide(); s.background={color:C.white};
+    staticHdr(s,pres,"Here, is the customised content strategy table for you!",d.brandName);
+    const hX17=[0.25,1.48,2.52,7.1,8.12],hW17=[1.2,1.02,4.55,0.98,1.6];
+    s.addShape(pres.shapes.RECTANGLE,{x:0.25,y:0.65,w:9.5,h:0.34,fill:{color:C.purple},line:{color:C.purple}});
+    [["Source Type",0],["Estimated Weight",1],["Notes",2],["% Weightage",3],["Relevant Examples",4]].forEach(([h,i])=>s.addText(h,{x:hX17[i]+0.04,y:0.68,w:hW17[i]-0.06,h:0.28,fontSize:7,bold:true,color:C.white,fontFace:"Calibri",align:"center",wrap:true}));
+    [["Product & Platform Pages","Very High","Core retrieval: prompts like platform AI, ITSM","25%","ITSM, ITOM, CSM, HRSD, Now Assist (GenAI)"],
+        ["Industry Solutions Pages","High","For prompts like workflow automation for banking, government digital services","14%","Financial services, healthcare, manufacturing, government, telecom"],
+        ["AI & Technology Innovation","High","For prompts like Now Assist generative AI, platform intelligence","13%","GenAI copilots, predictive intelligence, Vancouver releases"],
+        ["Customer Stories / Case Studies","High","Retrieval for ServiceNow success stories, ServiceNow ROI","12%","Case studies with Citi, DHL, Novartis, government agencies"],
+        ["Pricing / Demo Pages","Medium-High","For prompts like ServiceNow demo, ServiceNow pricing","10%","Request a demo, Now Assist ROI tools"],
+        ["Documentation & Knowledge Base","Medium","Retrieval for prompts like ServiceNow API, developer docs","8%","Developer portal, integration hub docs, API references"],
+        ["Events & Webinars","Medium","For prompts like ServiceNow Knowledge conference","6%","Knowledge conference sessions, leadership keynotes"],
+        ["Press & Newsroom","Medium-Low","For prompts like ServiceNow earnings, acquisitions","6%","Acquisitions, quarterly earnings"],
+        ["Support / Help Center","Low-Medium","For prompts like ServiceNow login, support portal","4%","Support portal, instance upgrades, troubleshooting"],
+        ["Careers & Corporate Pages","Low","For prompts like jobs at ServiceNow, company culture","2%","Careers site, employee stories, ESG reports"],
+       ].forEach((row,ri)=>{
+             const y=1.01+ri*0.38,bg=ri%2===0?C.offwhite:C.white;
+             s.addShape(pres.shapes.RECTANGLE,{x:0.25,y,w:9.5,h:0.36,fill:{color:bg},line:{color:C.lightgray}});
+             [1.48,2.52,7.1,8.12].forEach(dx=>s.addShape(pres.shapes.RECTANGLE,{x:dx,y,w:0.015,h:0.36,fill:{color:C.lightgray},line:{color:C.lightgray}}));
+             row.forEach((cell,ci)=>s.addText(cell,{x:hX17[ci]+0.04,y:y+0.06,w:hW17[ci]-0.08,h:0.26,fontSize:6.5,color:C.darkgray,fontFace:"Calibri",align:"center",wrap:true}));
+       });
+    s.addText("Note: The weightage percentage is a relative effort guide. If you're putting X effort on a source with 2% weight, then a source with 8% weight deserves 4X effort. Prioritize accordingly.",{x:0.25,y:4.85,w:9.5,h:0.32,fontSize:7,italic:true,color:C.slate,fontFace:"Calibri",wrap:true});
+}
 
-  /* ── Copy images / media from template that don't already exist ── */
-  const tplMedia = Object.keys(tplZip.files).filter(f => f.startsWith("ppt/media/"));
-  const dynMedia = new Set(Object.keys(dynZip.files).filter(f => f.startsWith("ppt/media/")));
-  const mediaMap = {};
-  let nextMediaIdx = 1;
-  // find highest existing media index in dynamic
-  dynMedia.forEach(f => {
-    const m = f.match(/image(\d+)/);
-    if (m) nextMediaIdx = Math.max(nextMediaIdx, parseInt(m[1]) + 1);
-  });
-  for (const mf of tplMedia) {
-    const ext = mf.split(".").pop();
-    const newName = "ppt/media/image" + nextMediaIdx + "." + ext;
-    mediaMap[mf.replace("ppt/media/", "")] = newName.replace("ppt/media/", "");
-    dynZip.file(newName, await tplZip.file(mf).async("uint8array"));
-    nextMediaIdx++;
-  }
+function buildSlide18(pres, d) {
+    const s=pres.addSlide(); s.background={color:C.white};
+    logoPill(s, pres);
+    s.addText("Do you think this was helpful and want to dive deeper?",{x:0.35,y:0.55,w:9.3,h:1.5,fontSize:32,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
+    s.addText("Reach us at +14157545133",{x:0.35,y:2.3,w:6,h:0.38,fontSize:14,color:C.darkgray,fontFace:"Calibri"});
+    s.addText("or write to us at kishan@peppercontent.io",{x:0.35,y:2.68,w:6,h:0.38,fontSize:14,color:C.darkgray,fontFace:"Calibri"});
+    s.addShape(pres.shapes.RECTANGLE,{x:0,y:3.62,w:10,h:0.06,fill:{color:C.yellow},line:{color:C.yellow}});
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.35,y:3.82,w:9.3,h:0.96,fill:{color:"FFF3C4"},line:{color:C.yellow},rectRadius:0.08});
+    s.addText("We are hosting some free GEO workshops for corporates and if you think you'd be interested in the same, please write to us",{x:0.55,y:3.92,w:9.0,h:0.76,fontSize:12,color:C.purple,align:"center",valign:"middle",fontFace:"Calibri",wrap:true});
+}
 
-  /* ── Prepare pepper logo for injection ── */
-  const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
-  let pepperMediaName = null;
-  if (fs.existsSync(pepperLogoPath)) {
-    const logoData = fs.readFileSync(pepperLogoPath);
-    pepperMediaName = "image" + nextMediaIdx + ".png";
-    dynZip.file("ppt/media/" + pepperMediaName, logoData);
-    nextMediaIdx++;
-    console.log("  Pepper logo added as:", pepperMediaName);
-  }
-
-  /* ── Copy slide layouts and masters from template ── */
-  const tplLayouts = Object.keys(tplZip.files).filter(f => f.startsWith("ppt/slideLayouts/"));
-  const dynLayouts = new Set(Object.keys(dynZip.files).filter(f => f.startsWith("ppt/slideLayouts/")));
-  let nextLayoutIdx = 1;
-  dynLayouts.forEach(f => { const m = f.match(/slideLayout(\d+)/); if (m) nextLayoutIdx = Math.max(nextLayoutIdx, parseInt(m[1]) + 1); });
-  const layoutMap = {};
-  for (const lf of tplLayouts) {
-    if (lf.endsWith(".rels")) continue;
-    const num = lf.match(/slideLayout(\d+)/);
-    if (!num) continue;
-    const newLayoutName = "ppt/slideLayouts/slideLayout" + nextLayoutIdx + ".xml";
-    layoutMap["slideLayout" + num[1] + ".xml"] = "slideLayout" + nextLayoutIdx + ".xml";
-    let layoutXml = await tplZip.file(lf).async("string");
-    // remap media references in layout
-    for (const [oldM, newM] of Object.entries(mediaMap)) {
-      layoutXml = layoutXml.split(oldM).join(newM);
-    }
-    dynZip.file(newLayoutName, layoutXml);
-    // Copy layout rels if exist
-    const relsPath = lf.replace("slideLayouts/", "slideLayouts/_rels/") + ".rels";
-    if (tplZip.file(relsPath)) {
-      let relsXml = await tplZip.file(relsPath).async("string");
-      for (const [oldM, newM] of Object.entries(mediaMap)) {
-        relsXml = relsXml.split(oldM).join(newM);
-      }
-      const newRelsPath = newLayoutName.replace("slideLayouts/", "slideLayouts/_rels/") + ".rels";
-      dynZip.file(newRelsPath, relsXml);
-    }
-    nextLayoutIdx++;
-  }
-
-  /* ── Copy each template slide ── */
-  for (let ti = 1; ti <= tplSlideCount; ti++) {
-    const newIdx = dynSlideCount + ti;
-    console.log("  Copying template slide", ti, "-> slide" + newIdx);
-
-    // Copy slide XML
-    let slideXml = await tplZip.file("ppt/slides/slide" + ti + ".xml").async("string");
-    // remap media references
-    for (const [oldM, newM] of Object.entries(mediaMap)) {
-      slideXml = slideXml.split(oldM).join(newM);
-    }
-    dynZip.file("ppt/slides/slide" + newIdx + ".xml", slideXml);
-
-    // Copy slide rels
-    const relsFile = tplZip.file("ppt/slides/_rels/slide" + ti + ".xml.rels");
-    let relsXml = relsFile ? await relsFile.async("string") : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
-    // remap media references in rels
-    for (const [oldM, newM] of Object.entries(mediaMap)) {
-      relsXml = relsXml.split(oldM).join(newM);
-    }
-    // remap layout references
-    for (const [oldL, newL] of Object.entries(layoutMap)) {
-      relsXml = relsXml.split(oldL).join(newL);
-    }
-
-    // Inject pepper logo relationship if needed
-    if (pepperMediaName) {
-      const logoRelId = "rIdPepperLogo";
-      if (!relsXml.includes(logoRelId)) {
-        relsXml = relsXml.replace(
-          "</Relationships>",
-          '<Relationship Id="' + logoRelId + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/' + pepperMediaName + '"/></Relationships>'
-        );
-      }
-
-      // Inject the logo pill shape into slide XML
-      // Position: x=9.0in, y=0.12in — converted to EMUs (1 inch = 914400 EMU)
-      const logoShapeXml = '<p:sp><p:nvSpPr><p:cNvPr id="9999" name="PepperLogoPill"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="8229600" y="109728"/><a:ext cx="777240" cy="237744"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val 16667"/></a:avLst></a:prstGeom><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:ln w="12700"><a:solidFill><a:srgbClr val="E2E1F0"/></a:solidFill></a:ln></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr/></a:p></p:txBody></p:sp>';
-      const logoImageXml = '<p:pic><p:nvPicPr><p:cNvPr id="9998" name="PepperLogoImg"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="' + logoRelId + '"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="8256240" y="128016"/><a:ext cx="685800" cy="182880"/></a:xfrm></p:spPr></p:pic>';
-
-      // Check if logo pill already exists
-      if (!slideXml.includes("PepperLogoPill")) {
-        // Insert before </p:spTree>
-        slideXml = slideXml.replace("</p:spTree>", logoShapeXml + logoImageXml + "</p:spTree>");
-        dynZip.file("ppt/slides/slide" + newIdx + ".xml", slideXml);
-      }
-    }
-
-    dynZip.file("ppt/slides/_rels/slide" + newIdx + ".xml.rels", relsXml);
-  }
-
-  /* ── Update presentation.xml to include new slides ── */
-  let presXml = await dynZip.file("ppt/presentation.xml").async("string");
-  // Find the highest rId in presentation.xml
-  let maxRId = 0;
-  const rIdMatches = presXml.match(/rId(\d+)/g) || [];
-  rIdMatches.forEach(r => { const n = parseInt(r.replace("rId", "")); if (n > maxRId) maxRId = n; });
-
-  for (let ti = 1; ti <= tplSlideCount; ti++) {
-    const newIdx = dynSlideCount + ti;
-    maxRId++;
-    const rId = "rId" + maxRId;
-    // Add sldIdLst entry
-    const sldId = 256 + newIdx;
-    presXml = presXml.replace("</p:sldIdLst>", '<p:sldId id="' + sldId + '" r:id="' + rId + '"/></p:sldIdLst>');
-  }
-  dynZip.file("ppt/presentation.xml", presXml);
-
-  /* ── Update ppt/_rels/presentation.xml.rels ── */
-  let presRels = await dynZip.file("ppt/_rels/presentation.xml.rels").async("string");
-  let rIdCounter = maxRId - tplSlideCount; // reset to where we started adding
-  for (let ti = 1; ti <= tplSlideCount; ti++) {
-    const newIdx = dynSlideCount + ti;
-    rIdCounter++;
-    const rId = "rId" + rIdCounter;
-    presRels = presRels.replace(
-      "</Relationships>",
-      '<Relationship Id="' + rId + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide' + newIdx + '.xml"/></Relationships>'
-    );
-  }
-  dynZip.file("ppt/_rels/presentation.xml.rels", presRels);
-
-  /* ── Update [Content_Types].xml ── */
-  let contentTypes = await dynZip.file("[Content_Types].xml").async("string");
-  for (let ti = 1; ti <= tplSlideCount; ti++) {
-    const newIdx = dynSlideCount + ti;
-    const override = '<Override PartName="/ppt/slides/slide' + newIdx + '.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>';
-    if (!contentTypes.includes("slide" + newIdx + ".xml")) {
-      contentTypes = contentTypes.replace("</Types>", override + "</Types>");
-    }
-  }
-  // Also add layout content types if needed
-  for (const [oldL, newL] of Object.entries(layoutMap)) {
-    const override = '<Override PartName="/ppt/slideLayouts/' + newL + '" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>';
-    if (!contentTypes.includes(newL)) {
-      contentTypes = contentTypes.replace("</Types>", override + "</Types>");
-    }
-  }
-  dynZip.file("[Content_Types].xml", contentTypes);
-
-  /* ── Write merged PPTX back ── */
-  const merged = await dynZip.generateAsync({ type: "nodebuffer" });
-  fs.writeFileSync(dynamicPptxPath, merged);
-  console.log("\u2705 Merged PPTX written:", dynamicPptxPath, "(" + (dynSlideCount + tplSlideCount) + " total slides)");
+// ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
+function buildPPTX(data, outputPath) {
+    const pres=new pptxgen();
+    pres.layout="LAYOUT_16x9";
+    pres.title=data.brandName+" GEO Audit \u2014 Atlas";
+    pres.author="Pepper.inc Atlas";
+    buildSlide1(pres,data);
+    buildSlide2(pres,data);
+    buildSlide3(pres,data);
+    buildSlide4(pres,data);
+    buildSlide5(pres,data);
+    buildSlide6(pres,data);
+    buildSlide7(pres,data);
+    buildSlide8(pres,data);
+    buildSlide12(pres,data);
+    buildSlide13(pres,data);
+    buildSlide14(pres,data);
+    buildSlide15(pres,data);
+    buildSlide16(pres,data);
+    buildSlide17(pres,data);
+    buildSlide18(pres,data);
+    pres.writeFile({ fileName:outputPath });
+    console.log("\u2705 PPTX written:", outputPath, "(15 slides)");
 }
 
 // ─── API: POST /generate ───────────────────────────────────────────────────
@@ -665,11 +666,7 @@ app.post("/generate", async (req, res) => {
 
       console.log("\n\u{1F5BC} Building PPTX for:", data.brandName);
                  buildPPTX(data, pptxOut);
-    await new Promise(r => setTimeout(r, 500));
-
-    console.log("\u{1F4CE} Merging with template slides...");
-    await mergeWithTemplate(pptxOut);
-    await new Promise(r => setTimeout(r, 500));
+                 await new Promise(r => setTimeout(r, 1000));
 
       console.log("\u{1F4C4} Converting to PDF...");
                  execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 60000 });
@@ -685,8 +682,7 @@ app.post("/generate", async (req, res) => {
                  console.error("\u274C Error:", err.message);
                  res.status(500).json({ error: err.message || "Generation failed." });
            
-           }
-           });
+});
 
 app.get("/health", (_, res) => res.json({ status: "ok" }));
 
