@@ -450,8 +450,8 @@ function buildSlide12(pres, d) {
     s.addShape(pres.shapes.OVAL,{x:3.5,y:1.3,w:2.8,h:2.8,fill:{color:C.white},line:{color:C.white}});
     s.addShape(pres.shapes.OVAL,{x:3.72,y:1.52,w:2.36,h:2.36,fill:{color:"E8E4FF"},line:{color:C.violet,pt:1}});
     s.addShape(pres.shapes.OVAL,{x:4.0,y:1.8,w:1.8,h:1.8,fill:{color:C.white},line:{color:C.white}});
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:4.08,y:1.88,w:1.64,h:1.0,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.08});
-    s.addText("Pepper's GEO\nApproach",{x:4.08,y:1.88,w:1.64,h:1.0,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:4.08,y:2.2,w:1.64,h:1.0,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.08});
+    s.addText("Pepper's GEO\nApproach",{x:4.08,y:2.2,w:1.64,h:1.0,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
     s.addText("Visibility",{x:0.28,y:1.05,w:2.75,h:0.36,fontSize:16,bold:true,color:C.navy,fontFace:"Calibri"});
     s.addText("Can LLMs see your content?",{x:0.28,y:1.4,w:2.75,h:0.28,fontSize:10,italic:true,color:C.purple,fontFace:"Calibri"});
     ["We audit if you're being cited across AI Search (ChatGPT, Perplexity, SGE)","We identify which competitors are winning those spots and why","We check if your URLs are indexable, link-worthy, and retrievable"].forEach((b,i)=>{
@@ -676,7 +676,7 @@ app.post("/generate", async (req, res) => {
            } catch (err) {
                  console.error("\u274C Error:", err.message);
                  res.status(500).json({ error: err.message || "Generation failed." });
-           }
+           
 });
 
 app.get("/health", (_, res) => res.json({ status: "ok" }));
