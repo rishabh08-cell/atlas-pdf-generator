@@ -685,7 +685,8 @@ app.post("/generate", async (req, res) => {
                  console.error("\u274C Error:", err.message);
                  res.status(500).json({ error: err.message || "Generation failed." });
            
-});
+           }
+           });
 
 app.get("/health", (_, res) => res.json({ status: "ok" }));
 
