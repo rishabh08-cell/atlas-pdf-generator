@@ -560,6 +560,11 @@ function buildSlide15(pres, d) {
     s.addText("Building Topical Authority still tops the content priority, with the relevant technical optimisation for each URL",{x:7.72,y:1.98,w:2.0,h:0.68,fontSize:8,color:C.darkgray,fontFace:"Calibri",wrap:true});
     s.addShape(pres.shapes.OVAL,{x:7.55,y:2.88,w:0.12,h:0.12,fill:{color:C.navy},line:{color:C.navy}});
     s.addText("The key reason smaller publishers/brands do well on LLM queries is their trust-signalling coverage",{x:7.72,y:2.82,w:2.0,h:0.68,fontSize:8,color:C.darkgray,fontFace:"Calibri",wrap:true});
+        // ── Curly-brace connectors ──
+        // Brand A left brace: spans from Brand A pill top to brand-logos bottom
+        s.addText("}", { x:-0.05,y:1.68,w:0.45,h:2.62, fontSize:80,color:C.slate,fontFace:"Calibri",align:"center",valign:"middle" });
+        // Brand B right brace: spans from Brand B table top to bottom of last row
+        s.addText("{", { x:7.2,y:1.68,w:0.45,h:3.08, fontSize:95,color:C.slate,fontFace:"Calibri",align:"center",valign:"middle" });
 }
 
 function buildSlide16(pres, d) {
