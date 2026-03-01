@@ -294,9 +294,6 @@ function buildSlide3(pres, d) {
           s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:6.72+bw,y:y+0.05,w:Math.max(9.7-(6.72+bw),0.8),h:0.2,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
     });
     s.addShape(pres.shapes.RECTANGLE,{x:4.75,y:1.05,w:0.03,h:3.8,fill:{color:C.lightgray},line:{color:C.lightgray}});
-    // Yellow highlight box at bottom
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.28,y:4.78,w:9.44,h:0.52,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.1});
-    s.addText("Top Cited Sources from our website \u2191",{x:0.28,y:4.78,w:9.44,h:0.52,fontSize:11,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
 }
 
 // ─── SLIDE 4: Top Cited Sources ────────────────────────────────────────────
@@ -324,6 +321,7 @@ function buildSlide4(pres, d) {
           s.addText(pg.url||d.domain,{x:5.15,y:y+0.24,w:4.4,h:0.16,fontSize:7,color:C.slate,fontFace:"Calibri"});
     });
     s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:5.0,y:4.75,w:4.7,h:0.34,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.05});
+    s.addText("Top Cited Sources from our website \u2191",{x:5.0,y:4.75,w:4.7,h:0.34,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
     s.addShape(pres.shapes.RECTANGLE,{x:4.75,y:1.05,w:0.03,h:3.9,fill:{color:C.lightgray},line:{color:C.lightgray}});
 }
 
