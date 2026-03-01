@@ -317,12 +317,10 @@ function buildSlide4(pres, d) {
     pages.forEach((pg,i)=>{
           const y=1.42+i*0.5;
           s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:5.05,y,w:4.6,h:0.44,fill:{color:C.offwhite},line:{color:C.lightgray},rectRadius:0.04,shadow:makeShadow()});
-          s.addText(pg.name,{x:5.15,y:y+0.04,w:3.6,h:0.2,fontSize:8.5,bold:true,color:C.navy,fontFace:"Calibri"});
-          s.addText((pg.prompts||0)+" Response"+(pg.prompts!==1?"s":""),{x:9.1,y:y+0.04,w:0.5,h:0.2,fontSize:7.5,bold:true,color:C.teal,align:"right",fontFace:"Calibri"});
+          s.addText(pg.name,{x:5.15,y:y+0.04,w:4.4,h:0.2,fontSize:8.5,bold:true,color:C.navy,fontFace:"Calibri"});
           s.addText(pg.url||d.domain,{x:5.15,y:y+0.24,w:4.4,h:0.16,fontSize:7,color:C.slate,fontFace:"Calibri"});
     });
     s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:5.0,y:4.75,w:4.7,h:0.34,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.05});
-    s.addText("Top Cited Sources from our website \u2191",{x:5.0,y:4.75,w:4.7,h:0.34,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
     s.addShape(pres.shapes.RECTANGLE,{x:4.75,y:1.05,w:0.03,h:3.9,fill:{color:C.lightgray},line:{color:C.lightgray}});
 }
 
