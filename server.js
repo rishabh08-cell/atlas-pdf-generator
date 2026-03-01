@@ -101,8 +101,8 @@ function normalizeData(api) {
         name: r.platform,
         mentions: r.mentions,
         citations: r.citations,
-        brandVisibility: r.brand_visibility,
-        domainCoverage: r.domain_coverage,
+        brandVisibility: Math.round((r.brand_visibility || 0) * 10) / 10,
+        domainCoverage: Math.round((r.domain_coverage || 0) * 10) / 10,
   }));
 
   // ── Prompt themes from /prompts-themes ──
