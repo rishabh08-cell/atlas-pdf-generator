@@ -602,31 +602,32 @@ function buildSlide16(pres, d) {
         {n:"4",title:"Page Creation & Optimization",body:"Identifying pages to be created & optimized"},
         {n:"5",title:"Community Visibility",body:"Access your presence of reddit, Quora forums"}
     ];
-    const bW=1.68,bH=1.62,bY=1.22,sx16=0.28;
+    const bW=1.58,bH=1.52,bY=1.32,gap=0.18,sx16=0.28;
 
     steps.forEach((step,i)=>{
-        const x=sx16+i*(bW+0.1),isH=i===1;
+        const x=sx16+i*(bW+gap),isH=i===1;
         // Numbered circle icon above each box
         s.addShape(pres.shapes.OVAL,{x:x+bW/2-0.18,y:bY-0.44,w:0.36,h:0.36,fill:{color:C.navy},line:{color:C.navy}});
         s.addText(step.n,{x:x+bW/2-0.18,y:bY-0.44,w:0.36,h:0.36,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
         // Card box
         s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x,y:bY,w:bW,h:bH,fill:{color:C.white},line:{color:isH?C.navy:C.teal,pt:isH?2:1.5},rectRadius:0.12});
         // Step number
-        s.addText(step.n+".",{x:x+0.1,y:bY+0.1,w:bW-0.2,h:0.28,fontSize:9.5,bold:true,color:C.navy,align:"center",fontFace:"Calibri"});
+        s.addText(step.n+".",{x:x+0.1,y:bY+0.1,w:bW-0.2,h:0.26,fontSize:9.5,bold:true,color:C.navy,align:"center",fontFace:"Calibri"});
         // Title
-        s.addText(step.title,{x:x+0.08,y:bY+0.34,w:bW-0.16,h:0.42,fontSize:9,bold:true,color:C.navy,align:"center",fontFace:"Calibri",wrap:true});
+        s.addText(step.title,{x:x+0.08,y:bY+0.32,w:bW-0.16,h:0.42,fontSize:9,bold:true,color:C.navy,align:"center",fontFace:"Calibri",wrap:true});
         // Body
-        s.addText(step.body,{x:x+0.08,y:bY+0.8,w:bW-0.16,h:0.72,fontSize:7.5,italic:true,color:C.slate,align:"center",fontFace:"Calibri",wrap:true});
+        s.addText(step.body,{x:x+0.08,y:bY+0.78,w:bW-0.16,h:0.66,fontSize:7.5,italic:true,color:C.slate,align:"center",fontFace:"Calibri",wrap:true});
         // Arrow connector between boxes
-        if(i<4)s.addShape(pres.shapes.RECTANGLE,{x:x+bW,y:bY+bH/2-0.04,w:0.1,h:0.08,fill:{color:C.navy},line:{color:C.navy}});
+        if(i<4)s.addShape(pres.shapes.RECTANGLE,{x:x+bW,y:bY+bH/2-0.04,w:gap,h:0.08,fill:{color:C.navy},line:{color:C.navy}});
     });
 
     // Step 6 - yellow box at bottom with numbered circle
-    s.addShape(pres.shapes.OVAL,{x:0.36,y:2.64,w:0.36,h:0.36,fill:{color:C.navy},line:{color:C.navy}});
-    s.addText("6",{x:0.36,y:2.64,w:0.36,h:0.36,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.28,y:3.02,w:9.44,h:0.78,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.1});
-    s.addText("6. Implement & Iterate",{x:0.42,y:3.12,w:2.5,h:0.3,fontSize:10,bold:true,color:C.navy,fontFace:"Calibri"});
-    s.addText("Create new pages, update existing pages, implement schemas, and community replies and re-run the prompt set monthly to gauge lift and uncover new topical gaps.",{x:2.9,y:3.12,w:6.7,h:0.56,fontSize:9,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
+    const boxY=3.1;
+    s.addShape(pres.shapes.OVAL,{x:0.28+0.18,y:boxY-0.44,w:0.36,h:0.36,fill:{color:C.navy},line:{color:C.navy}});
+    s.addText("6",{x:0.28+0.18,y:boxY-0.44,w:0.36,h:0.36,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.28,y:boxY,w:9.44,h:0.78,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.1});
+    s.addText("6. Implement & Iterate",{x:0.42,y:boxY+0.1,w:2.5,h:0.3,fontSize:10,bold:true,color:C.navy,fontFace:"Calibri"});
+    s.addText("Create new pages, update existing pages, implement schemas, and community replies and re-run the prompt set monthly to gauge lift and uncover new topical gaps.",{x:2.9,y:boxY+0.1,w:6.7,h:0.56,fontSize:9,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
 }
 function buildSlide17(pres, d) {
     const s=pres.addSlide(); s.background={color:C.white};
