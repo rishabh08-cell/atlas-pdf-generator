@@ -536,30 +536,26 @@ function buildSlide15(pres, d) {
 
     s.addText("Illustration",{x:0.3,y:1.4,w:2,h:0.28,fontSize:10,bold:true,color:C.navy,fontFace:"Calibri"});
 
-    // ── Brand A pill (top of Brand A section) ──
+    // ── Brand A pill ──
     s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:1.72,w:0.8,h:0.28,fill:{color:C.navy},line:{color:C.navy},rectRadius:0.05});
     s.addText("Brand A",{x:0.3,y:1.72,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
 
-    // ── Brand A table ──
+    // ── Brand A table (moved down to centre-align with Brand B) ──
+    const aTableY=2.6;
     const hX15=[0.3,2.05,2.7],hW15=[1.72,0.62,0.9];
-    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.04,w:3.28,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
-    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15[i]+0.04,y:2.07,w:hW15[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:aTableY,w:3.28,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
+    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15[i]+0.04,y:aTableY+0.03,w:hW15[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
 
-    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.36,w:3.28,h:0.3,fill:{color:C.offwhite},line:{color:C.lightgray}});
-    s.addText("Best Credit Card for Travellers",{x:0.36,y:2.39,w:1.66,h:0.24,fontSize:7.5,color:C.darkgray,fontFace:"Calibri"});
-    s.addText("#1",{x:2.09,y:2.39,w:0.54,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
-    s.addText("0.0164",{x:2.74,y:2.39,w:0.8,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:aTableY+0.32,w:3.28,h:0.3,fill:{color:C.offwhite},line:{color:C.lightgray}});
+    s.addText("Best Credit Card for Travellers",{x:0.36,y:aTableY+0.35,w:1.66,h:0.24,fontSize:7.5,color:C.darkgray,fontFace:"Calibri"});
+    s.addText("#1",{x:2.09,y:aTableY+0.35,w:0.54,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+    s.addText("0.0164",{x:2.74,y:aTableY+0.35,w:0.8,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
 
-    // ── Brand A logos box (below table) ──
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:2.76,w:2.4,h:1.5,fill:{color:"F0EEFF"},line:{color:C.lightgray},rectRadius:0.08});
-    s.addText("CHASE",{x:0.4,y:2.88,w:2.2,h:0.36,fontSize:11,bold:true,color:C.navy,fontFace:"Calibri"});
-    s.addText("BANK OF AMERICA",{x:0.4,y:3.26,w:2.2,h:0.36,fontSize:10,bold:true,color:"CC0000",fontFace:"Calibri"});
-    s.addText("PNC",{x:0.4,y:3.64,w:2.2,h:0.36,fontSize:11,bold:true,color:C.orange,fontFace:"Calibri"});
-
-    // ── Brand B table (NO pill at top) ──
+    // ── Brand B table (no pill on top — pill is at bottom) ──
+    const bTableY=2.04;
     const hX15b=[3.8,5.6,6.3],hW15b=[1.78,0.68,0.88];
-    s.addShape(pres.shapes.RECTANGLE,{x:3.8,y:2.04,w:3.38,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
-    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15b[i]+0.04,y:2.07,w:hW15b[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
+    s.addShape(pres.shapes.RECTANGLE,{x:3.8,y:bTableY,w:3.38,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
+    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15b[i]+0.04,y:bTableY+0.03,w:hW15b[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
 
     [["Best Credit Card for Travellers","#4","0.0156"],
      ["Travel On A Budget","#5","0.0154"],
@@ -567,21 +563,20 @@ function buildSlide15(pres, d) {
      ["Cheapest Hotel Tricks on Your Credit Card","#4","0.0156"],
      ["Eligibility for Credit Card","#7","0.0149"],
      ["Total","","0.0767"]].forEach((r,ri)=>{
-        const y=2.36+ri*0.28,bg=ri%2===0?C.offwhite:C.white;
+        const y=bTableY+0.32+ri*0.28,bg=ri%2===0?C.offwhite:C.white;
         s.addShape(pres.shapes.RECTANGLE,{x:3.8,y,w:3.38,h:0.28,fill:{color:bg},line:{color:C.lightgray}});
         s.addText(r[0],{x:3.86,y:y+0.04,w:1.7,h:0.22,fontSize:6.5,color:C.darkgray,fontFace:"Calibri",wrap:true});
         s.addText(r[1],{x:5.64,y:y+0.04,w:0.6,h:0.22,fontSize:6.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
         s.addText(r[2],{x:6.34,y:y+0.04,w:0.8,h:0.22,fontSize:6.5,bold:ri===5,color:ri===5?C.navy:C.darkgray,align:"center",fontFace:"Calibri"});
     });
 
-    // ── Brand B pill at BOTTOM (below table, above logos) ──
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:3.8,y:4.08,w:0.8,h:0.28,fill:{color:C.teal},line:{color:C.teal},rectRadius:0.05});
-    s.addText("Brand B",{x:3.8,y:4.08,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+    // ── Brand B pill at BOTTOM (below table) ──
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:3.8,y:bTableY+2.02,w:0.8,h:0.28,fill:{color:C.teal},line:{color:C.teal},rectRadius:0.05});
+    s.addText("Brand B",{x:3.8,y:bTableY+2.02,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
 
-    // ── Brand B logos box (nerdwallet / credit karma) ──
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:3.3,y:3.96,w:3.0,h:1.32,fill:{color:"E8F5E9"},line:{color:"A5D6A7"},rectRadius:0.08});
-    s.addText("nerdwallet",{x:3.5,y:4.3,w:2.6,h:0.36,fontSize:13,bold:true,color:"0B8043",fontFace:"Calibri"});
-    s.addText("credit karma\u1D40\u1D39",{x:3.5,y:4.72,w:2.6,h:0.36,fontSize:13,bold:true,color:"0B8043",fontFace:"Calibri"});
+    // ── Takeaway box at bottom ──
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:4.52,w:6.88,h:0.52,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.08});
+    s.addText("For AI visibility, Brand B  >>>>  Brand A",{x:0.3,y:4.52,w:6.88,h:0.52,fontSize:13,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
 
     // ── Right-side bullet points with rich text ──
     s.addShape(pres.shapes.OVAL,{x:7.55,y:2.04,w:0.12,h:0.12,fill:{color:C.navy},line:{color:C.navy}});
@@ -595,12 +590,6 @@ function buildSlide15(pres, d) {
         {text:"The key reason of smaller publishers/brands doing well on LLM queries is their ",options:{fontSize:8,color:C.darkgray,fontFace:"Calibri"}},
         {text:"trust-signalling coverage",options:{fontSize:9,bold:true,color:"CC0000",fontFace:"Calibri"}}
     ],{x:7.72,y:2.82,w:2.0,h:0.78,wrap:true});
-
-    // ── Left curly-brace connector (Brand A section) ──
-    s.addText("}", {
-        x:-0.05,y:1.68,w:0.45,h:2.62,
-        fontSize:80,color:C.slate,fontFace:"Calibri",align:"center",valign:"middle"
-    });
 }
 function buildSlide16(pres, d) {
     const s=pres.addSlide(); s.background={color:C.white};
