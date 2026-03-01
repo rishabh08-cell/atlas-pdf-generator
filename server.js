@@ -540,18 +540,21 @@ function buildSlide15(pres, d) {
     s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:1.72,w:0.8,h:0.28,fill:{color:C.navy},line:{color:C.navy},rectRadius:0.05});
     s.addText("Brand A",{x:0.3,y:1.72,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
 
-    // ── Brand A table (moved down to centre-align with Brand B) ──
-    const aTableY=2.6;
+    // ── Brand A table (back to original position) ──
     const hX15=[0.3,2.05,2.7],hW15=[1.72,0.62,0.9];
-    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:aTableY,w:3.28,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
-    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15[i]+0.04,y:aTableY+0.03,w:hW15[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.04,w:3.28,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
+    [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15[i]+0.04,y:2.07,w:hW15[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
 
-    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:aTableY+0.32,w:3.28,h:0.3,fill:{color:C.offwhite},line:{color:C.lightgray}});
-    s.addText("Best Credit Card for Travellers",{x:0.36,y:aTableY+0.35,w:1.66,h:0.24,fontSize:7.5,color:C.darkgray,fontFace:"Calibri"});
-    s.addText("#1",{x:2.09,y:aTableY+0.35,w:0.54,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
-    s.addText("0.0164",{x:2.74,y:aTableY+0.35,w:0.8,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.36,w:3.28,h:0.3,fill:{color:C.offwhite},line:{color:C.lightgray}});
+    s.addText("Best Credit Card for Travellers",{x:0.36,y:2.39,w:1.66,h:0.24,fontSize:7.5,color:C.darkgray,fontFace:"Calibri"});
+    s.addText("#1",{x:2.09,y:2.39,w:0.54,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+    s.addText("0.0164",{x:2.74,y:2.39,w:0.8,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
 
-    // ── Brand B table (no pill on top — pill is at bottom) ──
+    // ── Brand B pill ABOVE its table (navy colour like Brand A) ──
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:3.8,y:1.72,w:0.8,h:0.28,fill:{color:C.navy},line:{color:C.navy},rectRadius:0.05});
+    s.addText("Brand B",{x:3.8,y:1.72,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+
+    // ── Brand B table ──
     const bTableY=2.04;
     const hX15b=[3.8,5.6,6.3],hW15b=[1.78,0.68,0.88];
     s.addShape(pres.shapes.RECTANGLE,{x:3.8,y:bTableY,w:3.38,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
@@ -569,10 +572,6 @@ function buildSlide15(pres, d) {
         s.addText(r[1],{x:5.64,y:y+0.04,w:0.6,h:0.22,fontSize:6.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
         s.addText(r[2],{x:6.34,y:y+0.04,w:0.8,h:0.22,fontSize:6.5,bold:ri===5,color:ri===5?C.navy:C.darkgray,align:"center",fontFace:"Calibri"});
     });
-
-    // ── Brand B pill at BOTTOM (below table) ──
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:3.8,y:bTableY+2.02,w:0.8,h:0.28,fill:{color:C.teal},line:{color:C.teal},rectRadius:0.05});
-    s.addText("Brand B",{x:3.8,y:bTableY+2.02,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
 
     // ── Takeaway box at bottom ──
     s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:4.52,w:6.88,h:0.52,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.08});
