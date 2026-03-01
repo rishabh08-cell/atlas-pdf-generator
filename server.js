@@ -279,7 +279,6 @@ function buildSlide3(pres, d) {
                   s.addText(brand.name,{x:x-0.1,y:barY-0.5,w:barW+0.2,h:0.34,fontSize:8,bold:isB,color:isB?C.orange:C.navy,align:"center",fontFace:"Calibri",wrap:true});
                   s.addShape(pres.shapes.RECTANGLE,{x,y:barY,w:barW,h:barH,fill:{color:col},line:{color:col},shadow:makeShadow()});
                   s.addText(brand.mentions+" mentions",{x:x-0.1,y:cb+0.06,w:barW+0.2,h:0.2,fontSize:7.5,color:C.slate,align:"center",fontFace:"Calibri"});
-                  if (isB) s.addText("\u{1F451}",{x:x+barW/2-0.24,y:barY+0.06,w:0.48,h:0.35,fontSize:18,align:"center"});
           });
     }
     const comps=d.competitorMentions.slice(0,10),maxPct=Math.max(...comps.map(c=>c.percentage),1);
