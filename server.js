@@ -621,10 +621,12 @@ function buildSlide16(pres, d) {
         if(i<4)s.addShape(pres.shapes.RECTANGLE,{x:x+bW,y:bY+bH/2-0.04,w:0.1,h:0.08,fill:{color:C.navy},line:{color:C.navy}});
     });
 
-    // Step 6 - full width box at bottom
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.28,y:3.02,w:9.44,h:0.78,fill:{color:C.white},line:{color:C.navy,pt:2},rectRadius:0.1});
+    // Step 6 - yellow box at bottom with numbered circle
+    s.addShape(pres.shapes.OVAL,{x:0.36,y:2.64,w:0.36,h:0.36,fill:{color:C.navy},line:{color:C.navy}});
+    s.addText("6",{x:0.36,y:2.64,w:0.36,h:0.36,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.28,y:3.02,w:9.44,h:0.78,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.1});
     s.addText("6. Implement & Iterate",{x:0.42,y:3.12,w:2.5,h:0.3,fontSize:10,bold:true,color:C.navy,fontFace:"Calibri"});
-    s.addText("Create new pages, update existing pages, implement schemas, and community replies and re-run the prompt set monthly to gauge lift and uncover new topical gaps.",{x:2.9,y:3.12,w:6.7,h:0.56,fontSize:9,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    s.addText("Create new pages, update existing pages, implement schemas, and community replies and re-run the prompt set monthly to gauge lift and uncover new topical gaps.",{x:2.9,y:3.12,w:6.7,h:0.56,fontSize:9,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
 }
 function buildSlide17(pres, d) {
     const s=pres.addSlide(); s.background={color:C.white};
