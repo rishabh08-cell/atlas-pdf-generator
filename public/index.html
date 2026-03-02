@@ -339,7 +339,38 @@
       color: rgba(100,116,139,0.6);
       text-align: center;
     }
-  </style>
+  
+    .format-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .format-row label {
+      font-size: .85rem;
+      color: rgba(255,255,255,.6);
+      font-weight: 500;
+    }
+    .format-select {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      font-size: .85rem;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .format-select:focus {
+      border-color: #ff6b35;
+    }
+    .format-select option {
+      background: #1a1a2e;
+      color: #fff;
+    }
+</style>
 </head>
 <body>
 
@@ -360,6 +391,13 @@
 
   <div class="card">
     <label class="input-label" for="url-input">Atlas Report URL</label>
+    <div class="format-row">
+      <label for="format-select">Output format</label>
+      <select id="format-select" class="format-select" onchange="updateFormatUI()">
+        <option value="pdf" selected>PDF</option>
+        <option value="pptx">PPTX (PowerPoint)</option>
+      </select>
+    </div>
     <div class="input-row">
       <input
         type="url"
@@ -372,7 +410,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
         </svg>
-        Generate PDF
+        <span id="btn-text">Generate PDF</span>
       </button>
     </div>
 
@@ -386,7 +424,7 @@
             <div class="step" id="step-1"><div class="step-dot"></div>Launching headless browser</div>
             <div class="step" id="step-2"><div class="step-dot"></div>Scraping Atlas report data</div>
             <div class="step" id="step-3"><div class="step-dot"></div>Building presentation slides</div>
-            <div class="step" id="step-4"><div class="step-dot"></div>Exporting to PDF</div>
+            <div class="step" id="step-4"><div class="step-dot"></div><span id="step-4-text">Exporting to PDF</span></div>
           </div>
         </div>
       </div>
@@ -411,7 +449,7 @@
     <div class="feat">AI Platform Breakdown</div>
     <div class="feat">Visibility Heatmaps</div>
     <div class="feat">Key Insights</div>
-    <div class="feat">Print-Ready PDF</div>
+    <div class="feat">PDF & PPTX Export</div>
   </div>
 
   <footer>
@@ -462,7 +500,15 @@
     });
   }
 
-  async function generate() {
+  
+    function updateFormatUI() {
+      const fmt = document.getElementById("format-select").value;
+      const label = fmt === "pptx" ? "PPTX" : "PDF";
+      document.getElementById("btn-text").textContent = "Generate " + label;
+      document.getElementById("step-4-text").textContent = fmt === "pptx" ? "Packaging PPTX" : "Exporting to PDF";
+    }
+
+    async function generate() {
     const url = document.getElementById("url-input").value.trim();
     if (!url) {
       document.getElementById("url-input").focus();
@@ -487,7 +533,7 @@
       const response = await fetch("/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, format: document.getElementById("format-select").value }),
       });
 
       clearTimeout(stepTimer);
@@ -502,7 +548,7 @@
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const cd = response.headers.get("content-disposition") || ""; const name = (cd.match(/filename="?([^";]+)"?/) || [])[1] || "GEO-report.pdf";
+      const cd = response.headers.get("content-disposition") || ""; const name = (cd.match(/filename="?([^";]+)"?/) || [])[1] || ("GEO-report." + document.getElementById("format-select").value);
       a.href = blobUrl;
       a.download = name;
       document.body.appendChild(a);
@@ -511,7 +557,7 @@
       URL.revokeObjectURL(blobUrl);
 
       setAllHidden();
-      document.getElementById("status-success-text").textContent = "Your PDF is ready — downloading now. Check your downloads folder.";
+      const fmt = document.getElementById("format-select").value.toUpperCase(); document.getElementById("status-success-text").textContent = "Your " + fmt + " is ready \u2014 downloading now. Check your downloads folder.";
       document.getElementById("status-success").classList.add("visible");
 
     } catch (err) {
@@ -526,7 +572,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
         </svg>
-        Generate PDF
+        Generate ${document.getElementById("format-select").value === "pptx" ? "PPTX" : "PDF"}
       `;
     }
   }
