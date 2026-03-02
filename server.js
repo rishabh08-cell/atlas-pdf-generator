@@ -700,7 +700,13 @@ app.post("/generate", async (req, res) => {
           return res.status(400).json({ error: "Please provide a reportId or a valid Atlas report URL." });
     }
 
-           const id = uuidv4(), pptxOut = path.join(TMP, id + ".pptx"), pdfOut = path.join(TMP, id + ".pdf");
+           // Support format parameter: "pdf" (default) or "pptx"
+  const format = (req.body.format || "pdf").toLowerCase();
+  if (!["pdf", "pptx"].includes(format)) {
+    return res.status(400).json({ error: "Invalid format. Use 'pdf' or 'pptx'." });
+  }
+
+    const id = uuidv4(), pptxOut = path.join(TMP, id + ".pptx"), pdfOut = path.join(TMP, id + ".pdf");
 
            try {
                  const apiData = await fetchReportData(reportId);
@@ -710,17 +716,27 @@ app.post("/generate", async (req, res) => {
                  buildPPTX(data, pptxOut);
                  await new Promise(r => setTimeout(r, 1000));
 
+    if (format === "pptx") {
+      // ── Serve PPTX directly (no LibreOffice conversion needed) ──
+      const fileName = `${data.brandName} x Pepper - GEO report.pptx`;
+      res.download(pptxOut, fileName, (err) => {
+        try { fs.unlinkSync(pptxOut); } catch {}
+        if (err && !res.headersSent) res.status(500).json({ error: "Download failed." });
+      });
+    } else {
+      // ── Convert to PDF via LibreOffice ──
       console.log("\u{1F4C4} Converting to PDF...");
-                 execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 60000 });
-                 if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
+      execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 60000 });
+      if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
 
       const fileName = `${data.brandName} x Pepper - GEO report.pdf`;
-                 res.download(pdfOut, fileName, (err) => {
-                         try { fs.unlinkSync(pptxOut); } catch {}
-                         try { fs.unlinkSync(pdfOut); } catch {}
-                         if (err && !res.headersSent) res.status(500).json({ error: "Download failed." });
-                 });
-           } catch (err) {
+      res.download(pdfOut, fileName, (err) => {
+        try { fs.unlinkSync(pptxOut); } catch {}
+        try { fs.unlinkSync(pdfOut); } catch {}
+        if (err && !res.headersSent) res.status(500).json({ error: "Download failed." });
+      });
+    }
+    } catch (err) {
                  console.error("\u274C Error:", err.message);
                  res.status(500).json({ error: err.message || "Generation failed." });
            
