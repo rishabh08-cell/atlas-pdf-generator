@@ -410,6 +410,9 @@ function buildSlide7(pres, d) {
 
 // ─── SLIDE 8: Brand Visibility by Platform ─────────────────────────────────
 function buildSlide8(pres, d) {
+        // Skip slide entirely when there is no platform visibility data
+        const _rows = d.brandVisibilityByPlatform;
+        if (!_rows || _rows.length === 0 || _rows.every(r => Object.keys(r).length <= 1)) return;
     const s=pres.addSlide(); s.background={color:C.white};
     hdr(s,pres,d.brandName+" Brand Visibility by Platform & Theme",d.brandName);
     ftr(s,pres,d.brandName,d.domain);
