@@ -71,7 +71,8 @@ async function fetchReportData(reportId) {
 // ─── STEP 2: Normalize API data into slide-ready shape ──────────────────────
 function normalizeData(api) {
     const { overview, competitors, platforms, prompts } = api;
-    const brand = overview.brand;
+    if (overview.status === "failed") throw new Error("This report failed to generate. Please re-run the audit in Atlas.");
+    const brand = overview.brand || { name: "Unknown", domain: "" };
 
   // ── Summary stats from /platforms ──
   const totalMentions = parseInt(platforms.stats.find(s => s.label === "Total Brand Mentions")?.value) || 0;
@@ -80,8 +81,8 @@ function normalizeData(api) {
     const avgDomainCoverage = platforms.stats.find(s => s.label === "Avg Domain Coverage")?.value || "0%";
 
   // ── Leaderboard & competitor mentions from /overview ──
-  const sortedCompetitors = [...overview.competitors].sort((a, b) => a.rank - b.rank);
-    const userCompetitor = overview.competitors.find(c => c.is_user);
+  const sortedCompetitors = [...(overview.competitors || [])].sort((a, b) => a.rank - b.rank);
+    const userCompetitor = (overview.competitors || []).find(c => c.is_user);
     const leaderboardRank = userCompetitor ? "#" + userCompetitor.rank : "#N/A";
 
   const leaderboard = sortedCompetitors.slice(0, 3).map(c => ({
