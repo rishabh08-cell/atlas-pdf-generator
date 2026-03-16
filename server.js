@@ -820,6 +820,23 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
 // ─── API: GET /bulk-progress (SSE for real-time updates — future use) ──────
 // Placeholder for Server-Sent Events based progress tracking
 
+
+// ─── API: GET /templates/bulk-template.xlsx (dynamically generated) ─────────
+app.get("/templates/bulk-template.xlsx", (req, res) => {
+  const wb = XLSX.utils.book_new();
+  const data = [
+    ["Atlas Report URL"],
+    ["https://atlas.pepper.inc/public/reports/YOUR-REPORT-ID-HERE/overview"],
+    ["https://atlas.pepper.inc/public/reports/ANOTHER-REPORT-ID/overview"],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws["!cols"] = [{ wch: 70 }];
+  XLSX.utils.book_append_sheet(wb, ws, "Reports");
+  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+  res.set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.set("Content-Disposition", 'attachment; filename="bulk-template.xlsx"');
+  res.send(Buffer.from(buf));
+});
 app.get("/health", (_, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 3000;
