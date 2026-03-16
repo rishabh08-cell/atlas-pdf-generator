@@ -28,7 +28,7 @@ const C = {
   purple: "3D35B5",
   violet: "7B7FD4",
   lilac: "A8ABEA",
-  orange: "DA5012",
+  orange: "EE7F51",
   teal: "0B7251",
   green: "0E9468",
   yellow: "F9B02A",
