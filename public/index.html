@@ -174,17 +174,18 @@
 
       <!-- ── Bulk upload section ── -->
       <div class="bulk-section" id="bulk-section">
-        <label class="input-label">Upload Excel File</label>
+        <label class="input-label">Upload Excel or CSV File</label>
         <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
           <div class="drop-zone-icon">📊</div>
           <div class="drop-zone-text">
-            <strong>Click to upload</strong> or drag & drop your .xlsx file<br>
-            One column with Atlas report URLs — max 25 reports
+            <strong>Click to upload</strong> or drag & drop your .xlsx or .csv file<br>
+            One column with Atlas report URLs — max 25 reports<br>Supports .xlsx and .csv formats
           </div>
           <div class="drop-zone-file" id="drop-zone-file"></div>
         </div>
-        <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="handleFileSelect(this)" />
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileSelect(this)" />
         <a class="template-link" href="/templates/bulk-template.xlsx" download>⬇ Download sample Excel template</a>
+        <a class="template-link" href="/templates/bulk-template.csv" download style="margin-left: 12px;">⬇ Download sample CSV template</a>
 
         <div style="margin-top: 16px;">
           <button class="btn" id="bulk-btn" onclick="generateBulk()" disabled>
@@ -221,7 +222,7 @@
       <div class="feat">Visibility Heatmaps</div>
       <div class="feat">Key Insights</div>
       <div class="feat">PDF & PPTX Export</div>
-      <div class="feat">Bulk Excel Upload</div>
+      <div class="feat">Bulk Excel & CSV Upload</div>
     </div>
 
     <footer>Built by pepper.inc · Atlas GEO Intelligence Platform</footer>
@@ -258,7 +259,7 @@
       e.preventDefault();
       dropZone.classList.remove('drag-over');
       const file = e.dataTransfer.files[0];
-      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'))) {
         setFile(file);
       }
     });
