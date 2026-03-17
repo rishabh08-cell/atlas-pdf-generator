@@ -22,7 +22,7 @@ const upload = multer({ dest: UPLOADS, limits: { fileSize: 5 * 1024 * 1024 } });
 
 const MAX_BULK_REPORTS = 25;
 
-// ─── Pepper brand colour palette ──────────────────────────────────────────────
+// âââ Pepper brand colour palette ââââââââââââââââââââââââââââââââââââââââââââââ
 const C = {
   navy: "0D007D",
   purple: "3D35B5",
@@ -43,7 +43,7 @@ function makeShadow() {
   return { type: "outer", blur: 6, offset: 2, angle: 135, color: "000000", opacity: 0.08 };
 }
 
-// ─── STEP 1: Fetch data from Atlas API ─────────────────────────────────────
+// âââ STEP 1: Fetch data from Atlas API âââââââââââââââââââââââââââââââââââââ
 const API_BASE = "https://hub.peppercontent.io/atlas-service/api/public/reports";
 
 function extractReportId(input) {
@@ -54,7 +54,7 @@ function extractReportId(input) {
 }
 
 async function fetchReportData(reportId) {
-  console.log("\n📡 Fetching report data for:", reportId);
+  console.log("\nð¡ Fetching report data for:", reportId);
   const endpoints = {
     overview: "overview",
     competitors: "competitors-comparison",
@@ -65,17 +65,17 @@ async function fetchReportData(reportId) {
 
   for (const [key, ep] of Object.entries(endpoints)) {
     const url = `${API_BASE}/${reportId}/${ep}`;
-    console.log(`  ⬇️ ${key}: ${url}`);
+    console.log(`  â¬ï¸ ${key}: ${url}`);
     const res = await fetch(url);
     if (!res.ok) throw new Error(`API error for ${ep}: ${res.status} ${res.statusText}`);
     results[key] = await res.json();
-    console.log(`  ✅ ${key} fetched`);
+    console.log(`  â ${key} fetched`);
   }
 
   return results;
 }
 
-// ─── STEP 2: Normalize API data into slide-ready shape ──────────────────────
+// âââ STEP 2: Normalize API data into slide-ready shape ââââââââââââââââââââââ
 function normalizeData(api) {
   const { overview, competitors, platforms, prompts } = api;
   if (overview.status === "failed") throw new Error("This report failed to generate. Please re-run the audit in Atlas.");
@@ -190,7 +190,7 @@ function normalizeData(api) {
   };
 }
 
-// ─── PPTX layout helpers ───────────────────────────────────────────────────
+// âââ PPTX layout helpers âââââââââââââââââââââââââââââââââââââââââââââââââââ
 function logoPill(s, pres) {
   const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x:9.13,y:0.12,w:0.72,h:0.24, fill:{color:C.white}, line:{color:C.lightgray,pt:1}, rectRadius:0.06, shadow:makeShadow() });
@@ -212,7 +212,7 @@ function hdr(s, pres, title, brandName) {
 
 function ftr(s, pres, brand, domain) {
   s.addShape(pres.shapes.RECTANGLE, { x:0,y:5.42,w:10,h:0.2, fill:{color:C.navy}, line:{color:C.navy} });
-  s.addText(brand+" · "+domain+" · GEO Audit by Atlas / Pepper.inc", { x:0.3,y:5.43,w:9.4,h:0.18, fontSize:6.5,color:"AAAACC",fontFace:"Calibri" });
+  s.addText(brand+" Â· "+domain+" Â· GEO Audit by Atlas / Pepper.inc", { x:0.3,y:5.43,w:9.4,h:0.18, fontSize:6.5,color:"AAAACC",fontFace:"Calibri" });
 }
 
 function staticHdr(s, pres, title, brandName) {
@@ -221,7 +221,7 @@ function staticHdr(s, pres, title, brandName) {
   s.addShape(pres.shapes.RECTANGLE, { x:0.35,y:0.56,w:3.5,h:0.025, fill:{color:C.navy}, line:{color:C.navy} });
 }
 
-// ─── SLIDE 1: Cover ────────────────────────────────────────────────────────
+// âââ SLIDE 1: Cover ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function buildSlide1(pres, d) {
   const s=pres.addSlide(); s.background={color:C.navy};
   s.addShape(pres.shapes.OVAL,{x:7.5,y:-0.5,w:3.5,h:3.5,fill:{color:"150050"},line:{color:"150050"}});
@@ -244,10 +244,10 @@ function buildSlide1(pres, d) {
     s.addText(k.v,{x,y:3.16,w:2.1,h:0.52,fontSize:24,bold:true,color:C.orange,fontFace:"Calibri"});
     s.addText(k.l,{x,y:3.66,w:2.1,h:0.22,fontSize:8,color:C.lilac,fontFace:"Calibri"});
   });
-  s.addText("Powered by atlas · pepper.inc",{x:0.5,y:5.15,w:9,h:0.22,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
+  s.addText("Powered by atlas Â· pepper.inc",{x:0.5,y:5.15,w:9,h:0.22,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
 }
 
-// ─── SLIDE 2: Prompts & Themes ─────────────────────────────────────────────
+// âââ SLIDE 2: Prompts & Themes âââââââââââââââââââââââââââââââââââââââââââââ
 function buildSlide2(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   const tp=d.promptThemes.reduce((a,t)=>a+(t.promptCount||t.prompts?.length||0),0);
@@ -262,7 +262,7 @@ function buildSlide2(pres, d) {
   });
 }
 
-// ─── SLIDE 3: Leaderboard + Competitors ───────────────────────────────────
+// âââ SLIDE 3: Leaderboard + Competitors âââââââââââââââââââââââââââââââââââ
 function buildSlide3(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   hdr(s,pres,"Brand Leaderboard & Competitor Mentions",d.brandName);
@@ -289,12 +289,12 @@ function buildSlide3(pres, d) {
     s.addText(comp.name,{x:5.26,y:y+0.05,w:1.4,h:0.2,fontSize:8,bold:isB,color:isB?C.purple:C.navy,fontFace:"Calibri"});
     const bw=Math.min((comp.percentage/maxPct)*2.6,2.6);
     s.addShape(pres.shapes.RECTANGLE,{x:6.7,y:y+0.06,w:Math.max(bw,0.05),h:0.18,fill:{color:isB?C.navy:C.lightgray},line:{color:isB?C.navy:C.lightgray}});
-    s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:6.72+bw,y:y+0.05,w:Math.max(9.7-(6.72+bw),0.8),h:0.2,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
+    s.addText(comp.percentage+"% Â· "+comp.mentions+" mentions",{x:6.72+bw,y:y+0.05,w:Math.max(9.7-(6.72+bw),0.8),h:0.2,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
   });
   s.addShape(pres.shapes.RECTANGLE,{x:4.75,y:1.05,w:0.03,h:3.8,fill:{color:C.lightgray},line:{color:C.lightgray}});
 }
 
-// ─── SLIDE 4: Top Cited Sources ────────────────────────────────────────────
+// âââ SLIDE 4: Top Cited Sources ââââââââââââââââââââââââââââââââââââââââââââ
 function buildSlide4(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   hdr(s,pres,"Top Cited Sources (Category vs Us)",d.brandName);
@@ -318,11 +318,11 @@ function buildSlide4(pres, d) {
     s.addText(pg.name,{x:5.15,y:y+0.04,w:4.4,h:0.2,fontSize:8.5,bold:true,color:C.navy,fontFace:"Calibri"});
     s.addText(pg.url||d.domain,{x:5.15,y:y+0.24,w:4.4,h:0.16,fontSize:7,color:C.slate,fontFace:"Calibri"});
   });} s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:5.0,y:4.75,w:4.7,h:0.34,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.05});
-  s.addText("Top Cited Sources from our website ↑",{x:5.0,y:4.75,w:4.7,h:0.34,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
+  s.addText("Top Cited Sources from our website â",{x:5.0,y:4.75,w:4.7,h:0.34,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
   s.addShape(pres.shapes.RECTANGLE,{x:4.75,y:1.05,w:0.03,h:3.9,fill:{color:C.lightgray},line:{color:C.lightgray}});
 }
 
-// ─── SLIDE 5: Competitor Visibility Matrix ─────────────────────────────────
+// âââ SLIDE 5: Competitor Visibility Matrix âââââââââââââââââââââââââââââââââ
 function buildSlide5(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   hdr(s,pres,"Theme Benchmarks (% Visibility across Competitors)",d.brandName);
@@ -354,7 +354,7 @@ function buildSlide5(pres, d) {
   s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.",{x:0.3,y:5.22,w:9.4,h:0.16,fontSize:7,italic:true,color:C.slate,align:"center",fontFace:"Calibri"});
 }
 
-// ─── SLIDE 6: Metric Definitions ───────────────────────────────────────────
+// âââ SLIDE 6: Metric Definitions âââââââââââââââââââââââââââââââââââââââââââ
 function buildSlide6(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   hdr(s,pres,"What does each of these mean?",d.brandName);
@@ -369,13 +369,13 @@ function buildSlide6(pres, d) {
     const col=i%3,row=Math.floor(i/3),x=0.28+col*3.22,y=1.2+row*1.62;
     s.addShape(pres.shapes.RECTANGLE,{x,y,w:3.06,h:1.52,fill:{color:C.yellow},line:{color:"D4AA30"},shadow:makeShadow()});
     s.addText(def.term,{x:x+0.14,y:y+0.14,w:2.78,h:0.3,fontSize:12,bold:true,color:C.purple,fontFace:"Calibri"});
-    s.addText("— — — — — — — — — — — —",{x:x+0.14,y:y+0.44,w:2.78,h:0.16,fontSize:7,color:C.purple,fontFace:"Calibri"});
+    s.addText("â â â â â â â â â â â â",{x:x+0.14,y:y+0.44,w:2.78,h:0.16,fontSize:7,color:C.purple,fontFace:"Calibri"});
     s.addText(def.body,{x:x+0.14,y:y+0.6,w:2.78,h:0.78,fontSize:9,color:C.navy,italic:true,bold:true,fontFace:"Calibri",wrap:true});
   });
   s.addText("Source: Otterly.ai",{x:0.3,y:5.22,w:3,h:0.16,fontSize:7.5,bold:true,color:C.navy,fontFace:"Calibri"});
 }
 
-// ─── SLIDE 7: Platform mentions table ──────────────────────────────────────
+// âââ SLIDE 7: Platform mentions table ââââââââââââââââââââââââââââââââââââââ
 function buildSlide7(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   hdr(s,pres,d.brandName+" Mentions by AI Platform",d.brandName);
@@ -407,7 +407,7 @@ function buildSlide7(pres, d) {
   });
 }
 
-// ─── SLIDE 8: Brand Visibility by Platform ─────────────────────────────────
+// âââ SLIDE 8: Brand Visibility by Platform âââââââââââââââââââââââââââââââââ
 function buildSlide8(pres, d) {
   const _rows = d.brandVisibilityByPlatform;
   if (!_rows || _rows.length === 0 || _rows.every(r => Object.keys(r).length <= 1)) return;
@@ -438,9 +438,9 @@ function buildSlide8(pres, d) {
   s.addText("The above is a combination of all results from ChatGPT, AI Overviews, Claude and Perplexity.",{x:0.3,y:5.22,w:9.4,h:0.16,fontSize:7,italic:true,color:C.slate,align:"center",fontFace:"Calibri"});
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STATIC SLIDES 12–18
-// ═══════════════════════════════════════════════════════════════════════════
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// STATIC SLIDES 12â18
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function buildSlide12(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   staticHdr(s,pres,"The Approach For Solving GEO",d.brandName);
@@ -651,7 +651,7 @@ function buildSlide18(pres, d) {
   s.addText("We are hosting some free GEO workshops for corporates and if you think you'd be interested in the same, please write to us",{x:0.55,y:3.92,w:9.0,h:0.76,fontSize:12,color:C.purple,align:"center",valign:"middle",fontFace:"Calibri",wrap:true});
 }
 
-// ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
+// âââ STEP 3: Build PPTX âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function buildPPTX(data, outputPath) {
   const pres=new pptxgen();
   pres.layout="LAYOUT_16x9";
@@ -676,7 +676,7 @@ function buildPPTX(data, outputPath) {
   console.log("\u2705 PPTX written:", outputPath, "(15 slides)");
 }
 
-// ─── Helper: generate a single report file (used by both endpoints) ─────────
+// âââ Helper: generate a single report file (used by both endpoints) âââââââââ
 async function generateSingleReport(reportId, format) {
   const apiData = await fetchReportData(reportId);
   const data = normalizeData(apiData);
@@ -699,7 +699,7 @@ async function generateSingleReport(reportId, format) {
   return { filePath: pdfOut, brandName: data.brandName, ext: "pdf" };
 }
 
-// ─── API: POST /generate (single report) ──────────────────────────────────
+// âââ API: POST /generate (single report) ââââââââââââââââââââââââââââââââââ
 app.post("/generate", async (req, res) => {
   let reportId = req.body.reportId;
   if (!reportId && req.body.url) {
@@ -727,10 +727,10 @@ app.post("/generate", async (req, res) => {
   }
 });
 
-// ─── API: POST /generate-bulk (multiple reports from Excel) ───────────────
+// âââ API: POST /generate-bulk (multiple reports from Excel/CSV) âââââââââââââââ
 app.post("/generate-bulk", upload.single("file"), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: "Please upload an Excel file (.xlsx)." });
+    return res.status(400).json({ error: "Please upload an Excel (.xlsx) or CSV (.csv) file." });
   }
 
   const format = (req.body.format || "pdf").toLowerCase();
@@ -758,7 +758,7 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
       }
     }
   } catch (parseErr) {
-    return res.status(400).json({ error: "Could not parse the uploaded file. Please upload a valid .xlsx file." });
+    return res.status(400).json({ error: "Could not parse the uploaded file. Please upload a valid .xlsx or .csv file." });
   } finally {
     try { fs.unlinkSync(req.file.path); } catch {}
   }
@@ -785,10 +785,10 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
       zip.file(fileName, fs.readFileSync(result.filePath));
       try { fs.unlinkSync(result.filePath); } catch {}
       results.push({ index: i + 1, reportId: id, brand: result.brandName, status: "success" });
-      console.log(`  \u2705 [${i + 1}] ${result.brandName} — done`);
+      console.log(`  \u2705 [${i + 1}] ${result.brandName} â done`);
     } catch (err) {
       results.push({ index: i + 1, reportId: id, status: "failed", error: err.message });
-      console.log(`  \u274C [${i + 1}] ${id} — failed: ${err.message}`);
+      console.log(`  \u274C [${i + 1}] ${id} â failed: ${err.message}`);
     }
   }
 
@@ -805,7 +805,7 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
   // Add a summary text file inside the zip
   const summary = results.map(r => {
     if (r.status === "success") return `\u2705 [${r.index}] ${r.brand} (${r.reportId})`;
-    return `\u274C [${r.index}] ${r.reportId} — ${r.error}`;
+    return `\u274C [${r.index}] ${r.reportId} â ${r.error}`;
   }).join("\n");
   zip.file("_bulk-summary.txt", `Atlas GEO Bulk Report Summary\n${"=".repeat(40)}\nTotal: ${reportIds.length} | Success: ${succeeded} | Failed: ${failed}\n\n${summary}\n`);
 
@@ -817,11 +817,11 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
   console.log(`\u{1F4E6} Bulk ZIP sent: ${succeeded} succeeded, ${failed} failed`);
 });
 
-// ─── API: GET /bulk-progress (SSE for real-time updates — future use) ──────
+// âââ API: GET /bulk-progress (SSE for real-time updates â future use) ââââââ
 // Placeholder for Server-Sent Events based progress tracking
 
 
-// ─── API: GET /templates/bulk-template.xlsx (dynamically generated) ─────────
+// âââ API: GET /templates/bulk-template.xlsx (dynamically generated) âââââââââ
 app.get("/templates/bulk-template.xlsx", (req, res) => {
   const wb = XLSX.utils.book_new();
   const data = [
@@ -836,6 +836,14 @@ app.get("/templates/bulk-template.xlsx", (req, res) => {
   res.set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.set("Content-Disposition", 'attachment; filename="bulk-template.xlsx"');
   res.send(Buffer.from(buf));
+});
+
+// ─── API: GET /templates/bulk-template.csv (dynamically generated) ─────────
+app.get("/templates/bulk-template.csv", (req, res) => {
+  const csv = "Atlas Report URL\nhttps://atlas.pepper.inc/public/reports/YOUR-REPORT-ID-HERE/overview\nhttps://atlas.pepper.inc/public/reports/ANOTHER-REPORT-ID/overview\n";
+  res.set("Content-Type", "text/csv");
+  res.set("Content-Disposition", 'attachment; filename="bulk-template.csv"');
+  res.send(csv);
 });
 app.get("/health", (_, res) => res.json({ status: "ok" }));
 
