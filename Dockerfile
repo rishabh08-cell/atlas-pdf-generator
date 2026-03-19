@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y \
                 fonts-liberation \
                         # Java runtime required by LibreOffice for PPTX→PDF conversion
                                 default-jre \
-                    --no-install-recommends \
                         && rm -rf /var/lib/apt/lists/*
 
                         # ── Set working directory ────────────────────────────────────────────────────
