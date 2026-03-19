@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
         libreoffice \
             # Fonts for proper PDF rendering
                 fonts-liberation \
+                        # Java runtime required by LibreOffice for PPTX→PDF conversion
+                                default-jre \
                     --no-install-recommends \
                         && rm -rf /var/lib/apt/lists/*
 
