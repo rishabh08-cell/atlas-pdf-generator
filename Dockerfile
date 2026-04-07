@@ -7,26 +7,35 @@ RUN apt-get update && apt-get install -y \
         libreoffice \
             # Fonts for proper PDF rendering
                 fonts-liberation \
-                        # Java runtime required by LibreOffice for PPTX→PDF conversion
-                                default-jre \
-                        && rm -rf /var/lib/apt/lists/*
+                    # Java runtime required by LibreOffice for PPTX→PDF conversion
+                        default-jre \
+                            # Java bridge for LibreOffice (needed for PPTX import filters)
+                                libreoffice-java-common \
+                                    && rm -rf /var/lib/apt/lists/*
 
-                        # ── Set working directory ────────────────────────────────────────────────────
-                        WORKDIR /app
+                                    # ── Set JAVA_HOME so LibreOffice can locate the JRE ──────────────────────────
+                                    ENV JAVA_HOME=/usr/lib/jvm/default-java
+                                    ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
-                        # ── Install Node deps ────────────────────────────────────────────────────────
-                        COPY package.json .
-                        RUN npm install --production
+                                    # ── Verify Java + LibreOffice at build time ──────────────────────────────────
+                                    RUN java -version && soffice --headless --version
 
-                        # ── Copy app code ────────────────────────────────────────────────────────────
-                        COPY . .
+                                    # ── Set working directory ────────────────────────────────────────────────────
+                                    WORKDIR /app
 
-                        # ── Create tmp directory ─────────────────────────────────────────────────────
-                        RUN mkdir -p /app/tmp && chmod 777 /app/tmp
+                                    # ── Install Node deps ────────────────────────────────────────────────────────
+                                    COPY package.json .
+                                    RUN npm install --production
 
-                        # ── Expose port ──────────────────────────────────────────────────────────────
-                        ENV PORT=3000
-                        EXPOSE 3000
+                                    # ── Copy app code ────────────────────────────────────────────────────────────
+                                    COPY . .
 
-                        # ── Start ────────────────────────────────────────────────────────────────────
-                        CMD ["node", "server.js"]
+                                    # ── Create tmp directory ─────────────────────────────────────────────────────
+                                    RUN mkdir -p /app/tmp && chmod 777 /app/tmp
+
+                                    # ── Expose port ──────────────────────────────────────────────────────────────
+                                    ENV PORT=3000
+                                    EXPOSE 3000
+
+                                    # ── Start ────────────────────────────────────────────────────────────────────
+                                    CMD ["node", "server.js"]
