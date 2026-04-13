@@ -67,7 +67,7 @@ async function fetchReportData(reportId) {
     const url = `${API_BASE}/${reportId}/${ep}`;
     console.log(`  ⬇️ ${key}: ${url}`);
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`API error for ${ep}: ${res.status} ${res.statusText}`);
+    if (!res.ok) { const err = new Error(`API error for ${ep}: ${res.status} ${res.statusText}`); err.statusCode = res.status; throw err; }
     results[key] = await res.json();
     console.log(`  ✅ ${key} fetched`);
   }
@@ -693,7 +693,7 @@ async function generateSingleReport(reportId, format) {
 
   const pdfOut = path.join(TMP, id + ".pdf");
   console.log("\u{1F4C4} Converting to PDF...");
-  execSync(`soffice --headless --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 60000 });
+  { let pdfOk = false; for (let attempt = 1; attempt <= 3; attempt++) { try { try { execSync("killall -9 soffice.bin 2>/dev/null || true", { timeout: 5000 }); } catch {} execSync(`soffice --headless --norestore --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 120000 }); pdfOk = true; break; } catch (e) { console.log(`  ⚠️ soffice attempt ${attempt}/3 failed: ${e.message}`); if (attempt < 3) await new Promise(r => setTimeout(r, 2000)); } } if (!pdfOk) throw new Error("PDF conversion failed after 3 attempts — soffice crashed"); }
   try { fs.unlinkSync(pptxOut); } catch {}
   if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
   return { filePath: pdfOut, brandName: data.brandName, ext: "pdf" };
@@ -787,7 +787,7 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
       results.push({ index: i + 1, reportId: id, brand: result.brandName, status: "success" });
       console.log(`  \u2705 [${i + 1}] ${result.brandName} — done`);
     } catch (err) {
-      results.push({ index: i + 1, reportId: id, status: "failed", error: err.message });
+      const isNotFound = err.statusCode === 404 || err.message.includes("404"); results.push({ index: i + 1, reportId: id, status: "failed", error: err.message, permanent: isNotFound }); if (isNotFound) console.log(`  ⛔ [${i + 1}] ${id} — permanently failed (404 Not Found, report does not exist)`); else
       console.log(`  \u274C [${i + 1}] ${id} — failed: ${err.message}`);
     }
   }
