@@ -83,8 +83,8 @@ function normalizeData(api) {
 
   const totalMentions = parseInt(platforms.stats.find(s => s.label === "Total Brand Mentions")?.value) || 0;
   const totalCitations = parseInt(platforms.stats.find(s => s.label === "Total Domain Citations")?.value) || 0;
-  const avgBrandCoverage = platforms.stats.find(s => s.label === "Avg Brand Coverage")?.value || "0%";
-  const avgDomainCoverage = platforms.stats.find(s => s.label === "Avg Domain Coverage")?.value || "0%";
+  const avgBrandCoverage = platforms.stats.find(s => s.label === "Brand Visibility")?.value || "0%";
+  const avgDomainCoverage = platforms.stats.find(s => s.label === "Domain Prompt Presence")?.value || "0%";
 
   const sortedCompetitors = [...(overview.competitors || [])].sort((a, b) => a.rank - b.rank);
   const userCompetitor = (overview.competitors || []).find(c => c.is_user);
@@ -239,7 +239,7 @@ function buildSlide1(pres, d) {
   s.addText(d.brandName,{x:0.5,y:1.38,w:7,h:1.18,fontSize:50,bold:true,color:C.white,fontFace:"Calibri"});
   s.addText(d.domain,{x:0.5,y:2.6,w:5,h:0.38,fontSize:13,color:C.lilac,fontFace:"Calibri"});
   s.addShape(pres.shapes.RECTANGLE,{x:0.5,y:3.02,w:1.2,h:0.04,fill:{color:C.orange},line:{color:C.orange}});
-  [{v:String(d.totalMentions),l:"Total Mentions"},{v:d.avgBrandCoverage,l:"Brand Coverage"},{v:String(d.platformCount),l:"AI Platforms"},{v:d.leaderboardRank,l:"Leaderboard"}].forEach((k,i)=>{
+  [{v:String(d.totalMentions),l:"Total Mentions"},{v:d.avgBrandCoverage,l:"Brand Visibility"},{v:String(d.platformCount),l:"AI Platforms"},{v:d.leaderboardRank,l:"Leaderboard"}].forEach((k,i)=>{
     const x=0.5+i*2.3;
     s.addText(k.v,{x,y:3.16,w:2.1,h:0.52,fontSize:24,bold:true,color:C.orange,fontFace:"Calibri"});
     s.addText(k.l,{x,y:3.66,w:2.1,h:0.22,fontSize:8,color:C.lilac,fontFace:"Calibri"});
@@ -363,7 +363,7 @@ function buildSlide6(pres, d) {
    {term:"Share of Voice",body:"Percentage of your brand mentions compared to all total brand mentions"},
    {term:"Brand Position",body:"Average position of your brand in AI answers"},
    {term:"Domain Citation",body:"Number of times your website was cited on AI Search Engines"},
-   {term:"Brand Coverage",body:"Percentage of prompts that mention your brand"},
+   {term:"Brand Visibility",body:"Percentage of prompts that mention your brand"},
    {term:"Domain Coverage",body:"Percentage of prompts that cited your website"},
   ].forEach((def,i)=>{
     const col=i%3,row=Math.floor(i/3),x=0.28+col*3.22,y=1.2+row*1.62;
@@ -380,7 +380,7 @@ function buildSlide7(pres, d) {
   const s=pres.addSlide(); s.background={color:C.white};
   hdr(s,pres,d.brandName+" Mentions by AI Platform",d.brandName);
   ftr(s,pres,d.brandName,d.domain);
-  [{v:String(d.totalMentions),l:"Total Brand Mentions"},{v:String(d.totalCitations),l:"Total Domain Citations"},{v:d.avgBrandCoverage,l:"Avg Brand Coverage"},{v:d.avgDomainCoverage,l:"Avg Domain Coverage"}].forEach((k,i)=>{
+  [{v:String(d.totalMentions),l:"Total Brand Mentions"},{v:String(d.totalCitations),l:"Total Domain Citations"},{v:d.avgBrandCoverage,l:"Brand Visibility"},{v:d.avgDomainCoverage,l:"Domain Prompt Presence"}].forEach((k,i)=>{
     const x=0.25+i*2.42;
     s.addShape(pres.shapes.RECTANGLE,{x,y:1.08,w:2.3,h:0.72,fill:{color:C.white},line:{color:C.lightgray},shadow:makeShadow()});
     s.addShape(pres.shapes.RECTANGLE,{x,y:1.08,w:2.3,h:0.06,fill:{color:C.teal},line:{color:C.teal}});
