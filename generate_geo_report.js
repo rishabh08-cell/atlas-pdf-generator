@@ -79,7 +79,7 @@ function slideCover(pres, d) {
 
   [
     { label:"Total Mentions",   value: d.overview.totalMentions.toLocaleString() },
-    { label:"Brand Coverage",   value: d.overview.avgBrandCoverage },
+    { label:"Brand Visibility",   value: d.overview.avgBrandCoverage },
     { label:"AI Platforms",     value: String(d.overview.platforms) },
     { label:"Leaderboard Rank", value: d.overview.leaderboardRank },
   ].forEach((st, i) => {
@@ -155,8 +155,8 @@ function slidePlatforms(pres, d) {
   [
     { label:"Total Brand Mentions",   value: d.platformData.totalMentions.toLocaleString() },
     { label:"Total Domain Citations", value: d.platformData.totalCitations.toLocaleString() },
-    { label:"Avg Brand Coverage",     value: d.platformData.avgBrandCoverage },
-    { label:"Avg Domain Coverage",    value: d.platformData.avgDomainCoverage },
+    { label:"Brand Visibility",     value: d.platformData.avgBrandCoverage },
+    { label:"Domain Prompt Presence",    value: d.platformData.avgDomainCoverage },
   ].forEach((st, i) => {
     const x = 0.25 + i * 2.42;
     s.addShape(pres.shapes.RECTANGLE, { x, y:1.34, w:2.28, h:0.76, fill:{color:C.white}, line:{color:C.gray}, shadow:mkS() });
