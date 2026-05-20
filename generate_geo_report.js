@@ -52,7 +52,7 @@ function heatFg(val) { return val >= 20 ? C.white : C.navy; }
 function hdr(s, pres, title, sub) {
   // Solid bar only — NO decorative shapes on content slides
   s.addShape(pres.shapes.RECTANGLE, { x:0,   y:0,    w:10,  h:0.55, fill:{color:C.navy},  line:{color:C.navy}  });
-  s.addText("atlas",         { x:0.3,  y:0.09, w:1.1,  h:0.37, fontSize:14, bold:true, color:C.orange, fontFace:"Calibri", margin:0 });
+  s.addText("pepper",         { x:0.3,  y:0.09, w:1.1,  h:0.37, fontSize:14, bold:true, color:C.orange, fontFace:"Calibri", margin:0 });
   s.addText("by pepper.inc", { x:1.43, y:0.14, w:1.4,  h:0.27, fontSize:8,  color:C.lilac,  fontFace:"Calibri", margin:0 });
   if (sub) s.addText(sub.toUpperCase(), { x:0, y:0.1, w:9.7, h:0.34, fontSize:8, color:C.lilac, align:"right", charSpacing:2, fontFace:"Calibri", margin:0 });
   s.addText(title, { x:0.3, y:0.67, w:9.4, h:0.5, fontSize:20, bold:true, color:C.navy, fontFace:"Calibri", margin:0 });
@@ -60,7 +60,7 @@ function hdr(s, pres, title, sub) {
 
 function ftr(s, pres, brand, domain) {
   s.addShape(pres.shapes.RECTANGLE, { x:0, y:5.4, w:10, h:0.225, fill:{color:C.gray}, line:{color:C.gray} });
-  s.addText(`${brand}  ·  ${domain}  ·  GEO Audit by Atlas`, { x:0.3, y:5.41, w:9.4, h:0.2, fontSize:7, color:C.slate, fontFace:"Calibri", margin:0 });
+  s.addText(`${brand}  ·  ${domain}  ·  GEO Audit by Pepper`, { x:0.3, y:5.41, w:9.4, h:0.2, fontSize:7, color:C.slate, fontFace:"Calibri", margin:0 });
 }
 
 // ─── SLIDE 1: Cover ───────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ function slideCover(pres, d) {
     s.addText(st.label, { x, y:3.91, w:2.1, h:0.28, fontSize:9,  color:C.lilac,  fontFace:"Calibri", margin:0 });
   });
 
-  s.addText("Powered by atlas · pepper.inc", { x:0.5, y:5.15, w:9, h:0.28, fontSize:8, color:C.slate, fontFace:"Calibri", margin:0 });
+  s.addText("Powered by pepper", { x:0.5, y:5.15, w:9, h:0.28, fontSize:8, color:C.slate, fontFace:"Calibri", margin:0 });
 }
 
 // ─── SLIDE 2: Brand Leaderboard ───────────────────────────────────────────────
@@ -344,8 +344,8 @@ async function main() {
 
   const pres = new pptxgen();
   pres.layout = "LAYOUT_16x9";
-  pres.title  = `${data.brandName} GEO Audit — Atlas`;
-  pres.author = "Pepper.inc Atlas";
+  pres.title  = `${data.brandName} GEO Audit — Pepper`;
+  pres.author = "Pepper.inc";
 
   slideCover(pres, data);              console.log("  ✓ Cover");
   slideLeaderboard(pres, data);        console.log("  ✓ Brand Leaderboard");
