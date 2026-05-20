@@ -1,3 +1,4 @@
+// Slide layout: 8.27" x 6" custom print format
 const express = require("express");
 const pptxgen = require("pptxgenjs");
 const { execSync } = require("child_process");
