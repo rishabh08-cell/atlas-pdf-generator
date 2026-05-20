@@ -4,7 +4,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const multer = require("multer");
+const multer = require("multer")
 const XLSX = require("xlsx");
 const JSZip = require("jszip");
 
@@ -78,7 +78,7 @@ async function fetchReportData(reportId) {
 // ─── STEP 2: Normalize API data into slide-ready shape ──────────────────────
 function normalizeData(api) {
   const { overview, competitors, platforms, prompts } = api;
-  if (overview.status === "failed") throw new Error("This report failed to generate. Please re-run the audit in Atlas.");
+  if (overview.status === "failed") throw new Error("This report failed to generate. Please re-run the audit in Pepper.");
   const brand = overview.brand || { name: "Unknown", domain: "" };
 
   const totalMentions = parseInt(platforms.stats.find(s => s.label === "Total Brand Mentions")?.value) || 0;
@@ -203,7 +203,7 @@ function logoPill(s, pres) {
 
 function hdr(s, pres, title, brandName) {
   s.addShape(pres.shapes.RECTANGLE, { x:0,y:0,w:10,h:0.08, fill:{color:C.teal}, line:{color:C.teal} });
-  s.addText("atlas", { x:0.3,y:0.12,w:0.9,h:0.3, fontSize:11,bold:true,color:C.navy,fontFace:"Calibri" });
+  s.addText("pepper", { x:0.3,y:0.12,w:0.9,h:0.3, fontSize:11,bold:true,color:C.navy,fontFace:"Calibri" });
   s.addText("by pepper.inc", { x:1.2,y:0.17,w:1.3,h:0.22, fontSize:7,color:C.slate,fontFace:"Calibri" });
   logoPill(s, pres);
   s.addText(title, { x:0.3,y:0.5,w:7.2,h:0.48, fontSize:18,bold:true,color:C.navy,fontFace:"Calibri" });
@@ -212,7 +212,7 @@ function hdr(s, pres, title, brandName) {
 
 function ftr(s, pres, brand, domain) {
   s.addShape(pres.shapes.RECTANGLE, { x:0,y:5.42,w:10,h:0.2, fill:{color:C.navy}, line:{color:C.navy} });
-  s.addText(brand+" · "+domain+" · GEO Audit by Atlas / Pepper.inc", { x:0.3,y:5.43,w:9.4,h:0.18, fontSize:6.5,color:"AAAACC",fontFace:"Calibri" });
+  s.addText(brand+" · "+domain+" · GEO Audit by Pepper", { x:0.3,y:5.43,w:9.4,h:0.18, fontSize:6.5,color:"AAAACC",fontFace:"Calibri" });
 }
 
 function staticHdr(s, pres, title, brandName) {
@@ -226,7 +226,7 @@ function buildSlide1(pres, d) {
   const s=pres.addSlide(); s.background={color:C.navy};
   s.addShape(pres.shapes.OVAL,{x:7.5,y:-0.5,w:3.5,h:3.5,fill:{color:"150050"},line:{color:"150050"}});
   s.addShape(pres.shapes.OVAL,{x:8.2,y:0.2,w:2.0,h:2.0,fill:{color:C.purple},line:{color:C.purple}});
-  s.addText("atlas",{x:0.5,y:0.38,w:1.1,h:0.38,fontSize:15,bold:true,color:C.orange,fontFace:"Calibri"});
+  s.addText("pepper",{x:0.5,y:0.38,w:1.1,h:0.38,fontSize:15,bold:true,color:C.orange,fontFace:"Calibri"});
   s.addText("by pepper.inc",{x:1.63,y:0.44,w:1.5,h:0.26,fontSize:8,color:C.lilac,fontFace:"Calibri"});
   const pepperLogoPath = path.join(__dirname, "public", "logos", "pepper-logo.png");
   s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:9.13,y:0.35,w:0.72,h:0.24,fill:{color:"FFFFFF"},line:{color:"FFFFFF"},rectRadius:0.08});
@@ -244,7 +244,7 @@ function buildSlide1(pres, d) {
     s.addText(k.v,{x,y:3.16,w:2.1,h:0.52,fontSize:24,bold:true,color:C.orange,fontFace:"Calibri"});
     s.addText(k.l,{x,y:3.66,w:2.1,h:0.22,fontSize:8,color:C.lilac,fontFace:"Calibri"});
   });
-  s.addText("Powered by atlas · pepper.inc",{x:0.5,y:5.15,w:9,h:0.22,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
+  s.addText("Powered by pepper",{x:0.5,y:5.15,w:9,h:0.22,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
 }
 
 // ─── SLIDE 2: Prompts & Themes ─────────────────────────────────────────────
@@ -655,8 +655,8 @@ function buildSlide18(pres, d) {
 function buildPPTX(data, outputPath) {
   const pres=new pptxgen();
   pres.layout="LAYOUT_16x9";
-  pres.title=data.brandName+" GEO Audit \u2014 Atlas";
-  pres.author="Pepper.inc Atlas";
+  pres.title=data.brandName+" GEO Audit \u2014 Pepper";
+  pres.author="Pepper.inc";
   buildSlide1(pres,data);
   buildSlide2(pres,data);
   buildSlide3(pres,data);
@@ -706,7 +706,7 @@ app.post("/generate", async (req, res) => {
     reportId = extractReportId(req.body.url);
   }
   if (!reportId) {
-    return res.status(400).json({ error: "Please provide a reportId or a valid Atlas report URL." });
+    return res.status(400).json({ error: "Please provide a reportId or a valid Pepper report URL." });
   }
 
   const format = (req.body.format || "pdf").toLowerCase();
@@ -764,7 +764,7 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
   }
 
   if (reportIds.length === 0) {
-    return res.status(400).json({ error: "No valid Atlas report URLs or IDs found in the uploaded file." });
+    return res.status(400).json({ error: "No valid Pepper report URLs or IDs found in the uploaded file." });
   }
 
   if (reportIds.length > MAX_BULK_REPORTS) {
@@ -807,12 +807,12 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
     if (r.status === "success") return `\u2705 [${r.index}] ${r.brand} (${r.reportId})`;
     return `\u274C [${r.index}] ${r.reportId} — ${r.error}`;
   }).join("\n");
-  zip.file("_bulk-summary.txt", `Atlas GEO Bulk Report Summary\n${"=".repeat(40)}\nTotal: ${reportIds.length} | Success: ${succeeded} | Failed: ${failed}\n\n${summary}\n`);
+  zip.file("_bulk-summary.txt", `Pepper GEO Bulk Report Summary\n${"=".repeat(40)}\nTotal: ${reportIds.length} | Success: ${succeeded} | Failed: ${failed}\n\n${summary}\n`);
 
   const zipBuffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
 
   res.set("Content-Type", "application/zip");
-  res.set("Content-Disposition", `attachment; filename="Atlas-GEO-Reports-Bulk.${format}.zip"`);
+  res.set("Content-Disposition", `attachment; filename="Pepper-GEO-Reports-Bulk.${format}.zip"`);
   res.send(zipBuffer);
   console.log(`\u{1F4E6} Bulk ZIP sent: ${succeeded} succeeded, ${failed} failed`);
 });
@@ -825,7 +825,7 @@ app.post("/generate-bulk", upload.single("file"), async (req, res) => {
 app.get("/templates/bulk-template.xlsx", (req, res) => {
   const wb = XLSX.utils.book_new();
   const data = [
-    ["Atlas Report URL"],
+    ["Pepper Report URL"],
     ["https://atlas.pepper.inc/public/reports/YOUR-REPORT-ID-HERE/overview"],
     ["https://atlas.pepper.inc/public/reports/ANOTHER-REPORT-ID/overview"],
   ];
