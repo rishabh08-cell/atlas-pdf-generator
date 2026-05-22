@@ -366,11 +366,11 @@ function buildSlide6(pres, d) {
    {term:"Brand Visibility",body:"Percentage of prompts that mention your brand"},
    {term:"Domain Coverage",body:"Percentage of prompts that cited your website"},
   ].forEach((def,i)=>{
-    const col=i%3,row=Math.floor(i/3),x=0.28+col*3.22,y=1.2+row*1.62;
-    s.addShape(pres.shapes.RECTANGLE,{x,y,w:2.531,h:1.621,fill:{color:C.yellow},line:{color:"D4AA30"},shadow:makeShadow()});
-    s.addText(def.term,{x:x+0.14,y:y+0.14,w:2.299,h:0.32,fontSize:12,bold:true,color:C.purple,fontFace:"Calibri"});
-    s.addText("— — — — — — — — — — — —",{x:x+0.14,y:y+0.44,w:2.299,h:0.171,fontSize:7,color:C.purple,fontFace:"Calibri"});
-    s.addText(def.body,{x:x+0.14,y:y+0.6,w:2.299,h:0.832,fontSize:9,color:C.navy,italic:true,bold:true,fontFace:"Calibri",wrap:true});
+    const col=i%3,row=Math.floor(i/3),x=0.25+col*2.65,y=1.2+row*1.62;
+    s.addShape(pres.shapes.RECTANGLE,{x,y,w:2.50,h:1.621,fill:{color:C.yellow},line:{color:"D4AA30"},shadow:makeShadow()});
+    s.addText(def.term,{x:x+0.14,y:y+0.14,w:2.22,h:0.32,fontSize:12,bold:true,color:C.purple,fontFace:"Calibri"});
+    s.addText("— — — — — — — — — — — —",{x:x+0.14,y:y+0.44,w:2.22,h:0.171,fontSize:7,color:C.purple,fontFace:"Calibri"});
+    s.addText(def.body,{x:x+0.14,y:y+0.6,w:2.22,h:0.832,fontSize:9,color:C.navy,italic:true,bold:true,fontFace:"Calibri",wrap:true});
   });
   s.addText("Source: Otterly.ai",{x:0.248,y:5.568,w:2.481,h:0.171,fontSize:7.5,bold:true,color:C.navy,fontFace:"Calibri"});
 }
@@ -381,13 +381,13 @@ function buildSlide7(pres, d) {
   hdr(s,pres,d.brandName+" Mentions by AI Platform",d.brandName);
   ftr(s,pres,d.brandName,d.domain);
   [{v:String(d.totalMentions),l:"Total Brand Mentions"},{v:String(d.totalCitations),l:"Total Domain Citations"},{v:d.avgBrandCoverage,l:"Brand Visibility"},{v:d.avgDomainCoverage,l:"Domain Prompt Presence"}].forEach((k,i)=>{
-    const x=0.25+i*2.42;
-    s.addShape(pres.shapes.RECTANGLE,{x,y:1.152,w:1.902,h:0.768,fill:{color:C.white},line:{color:C.lightgray},shadow:makeShadow()});
-    s.addShape(pres.shapes.RECTANGLE,{x,y:1.152,w:1.902,h:0.064,fill:{color:C.teal},line:{color:C.teal}});
-    s.addText(k.v,{x,y:1.237,w:1.902,h:0.405,fontSize:20,bold:true,color:C.navy,align:"center",fontFace:"Calibri"});
-    s.addText(k.l,{x,y:1.621,w:1.902,h:0.256,fontSize:7.5,color:C.slate,align:"center",fontFace:"Calibri"});
+    const x=0.25+i*1.945;
+    s.addShape(pres.shapes.RECTANGLE,{x,y:1.152,w:1.815,h:0.768,fill:{color:C.white},line:{color:C.lightgray},shadow:makeShadow()});
+    s.addShape(pres.shapes.RECTANGLE,{x,y:1.152,w:1.815,h:0.064,fill:{color:C.teal},line:{color:C.teal}});
+    s.addText(k.v,{x,y:1.237,w:1.815,h:0.405,fontSize:20,bold:true,color:C.navy,align:"center",fontFace:"Calibri"});
+    s.addText(k.l,{x,y:1.621,w:1.815,h:0.256,fontSize:7.5,color:C.slate,align:"center",fontFace:"Calibri"});
   });
-  const colX=[0.25,2.15,3.2,4.3,7.1],colW=[1.85,1.0,1.05,2.75,2.6];
+  const colX=[0.25,1.65,2.40,3.20,5.65],colW=[1.40,0.75,0.80,2.45,2.40];
   s.addShape(pres.shapes.RECTANGLE,{x:0.207,y:2.027,w:7.857,h:0.299,fill:{color:C.lightgray},line:{color:C.lightgray}});
   ["Platform","Mentions","Citations","Brand Visibility","Domain Coverage"].forEach((h,i)=>s.addText(h,{x:colX[i],y:2.059,w:colW[i],h:0.235,fontSize:7.5,bold:true,color:C.slate,fontFace:"Calibri"}));
   d.platforms.forEach((p,i)=>{
