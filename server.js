@@ -391,7 +391,7 @@ function buildSlide7(pres, d) {
   s.addShape(pres.shapes.RECTANGLE,{x:0.207,y:2.027,w:7.857,h:0.299,fill:{color:C.lightgray},line:{color:C.lightgray}});
   ["Platform","Mentions","Citations","Brand Visibility","Domain Coverage"].forEach((h,i)=>s.addText(h,{x:colX[i],y:2.059,w:colW[i],h:0.235,fontSize:7.5,bold:true,color:C.slate,fontFace:"Calibri"}));
   d.platforms.forEach((p,i)=>{
-    const y=2.22+i*0.5,bg=i%2===0?"F4F3FD":C.white;
+    const y=2.40+i*0.5,bg=i%2===0?"F4F3FD":C.white;
     s.addShape(pres.shapes.RECTANGLE,{x:0.207,y:y-0.04,w:7.857,h:0.512,fill:{color:bg},line:{color:C.lightgray}});
     s.addText(p.name,{x:colX[0],y,w:colW[0],h:0.299,fontSize:9.5,bold:true,color:C.navy,fontFace:"Calibri"});
     s.addText(String(p.mentions),{x:colX[1],y,w:colW[1],h:0.299,fontSize:9.5,color:C.navy,fontFace:"Calibri"});
