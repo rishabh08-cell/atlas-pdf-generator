@@ -254,11 +254,11 @@ function buildSlide2(pres, d) {
   hdr(s,pres,`We Have Mapped ${tp} Prompts Across ${d.promptThemes.length} Themes`,d.brandName);
   ftr(s,pres,d.brandName,d.domain);
   d.promptThemes.slice(0,9).forEach((t,i)=>{
-    const col=i%3,row=Math.floor(i/3),x=0.28+col*3.15,y=1.1+row*0.82;
-    s.addShape(pres.shapes.RECTANGLE,{x,y,w:2.481,h:0.768,fill:{color:C.offwhite},line:{color:C.lightgray},shadow:makeShadow()});
+    const col=i%3,row=Math.floor(i/3),x=0.25+col*2.685,y=1.1+row*0.82;
+    s.addShape(pres.shapes.RECTANGLE,{x,y,w:2.4,h:0.768,fill:{color:C.offwhite},line:{color:C.lightgray},shadow:makeShadow()});
     s.addShape(pres.shapes.RECTANGLE,{x,y,w:0.033,h:0.768,fill:{color:C.teal},line:{color:C.teal}});
-    s.addText(t.theme,{x:x+0.1,y:y+0.08,w:2.357,h:0.363,fontSize:9.5,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
-    s.addText((t.promptCount||t.prompts?.length||0)+" prompts",{x:x+0.1,y:y+0.46,w:2.357,h:0.213,fontSize:8.5,color:C.slate,fontFace:"Calibri"});
+    s.addText(t.theme,{x:x+0.1,y:y+0.08,w:2.276,h:0.363,fontSize:9.5,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
+    s.addText((t.promptCount||t.prompts?.length||0)+" prompts",{x:x+0.1,y:y+0.46,w:2.276,h:0.213,fontSize:8.5,color:C.slate,fontFace:"Calibri"});
   });
 }
 
@@ -462,7 +462,7 @@ function buildSlide12(pres, d) {
     s.addShape(pres.shapes.OVAL,{x:5.706,y:1.813+i*0.42,w:0.083,h:0.107,fill:{color:C.navy},line:{color:C.navy}});
     s.addText(b,{x:5.839,y:1.771+i*0.42,w:2.192,h:0.427,fontSize:7.5,color:C.darkgray,fontFace:"Calibri",wrap:true});
   });
-  s.addText("Retrievability:",{x:5.706,y:3.52,w:2.357,h:0.363,fontSize:16,bold:true,color:C.navy,fontFace:"Calibri"});
+  s.addText("Retrievability:",{x:5.706,y:3.52,w:2.276,h:0.363,fontSize:16,bold:true,color:C.navy,fontFace:"Calibri"});
   s.addText("Can LLMs use your content to answer future questions?",{x:5.706,y:3.861,w:2.357,h:0.469,fontSize:9,italic:true,color:C.purple,fontFace:"Calibri",wrap:true});
   ["We chunk and tag your content to feed RAG systems better","We add LLM-readable markup and context layering (FAQs, comparisons, summaries)","We monitor which prompts lead to brand visibility and close the loop"].forEach((b,i)=>{
     s.addShape(pres.shapes.OVAL,{x:5.706,y:4.373+i*0.38,w:0.083,h:0.107,fill:{color:C.navy},line:{color:C.navy}});
