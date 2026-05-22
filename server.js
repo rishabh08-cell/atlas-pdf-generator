@@ -289,7 +289,7 @@ function buildSlide3(pres, d) {
     s.addText(comp.name,{x:4.35,y:y+0.05,w:1.158,h:0.213,fontSize:8,bold:isB,color:isB?C.purple:C.navy,fontFace:"Calibri"});
     const bw=Math.min((comp.percentage/maxPct)*2.6,2.6);
     s.addShape(pres.shapes.RECTANGLE,{x:5.541,y:y+0.06,w:Math.max(bw,0.05),h:0.192,fill:{color:isB?C.navy:C.lightgray},line:{color:isB?C.navy:C.lightgray}});
-    s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:5.557+bw,y:y+0.05,w:Math.max(9.7-(6.72+bw),0.8),h:0.213,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
+    s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:5.65+bw,y:y+0.05,w:Math.max(8.05-(5.65+bw),0.6),h:0.213,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
   });
   s.addShape(pres.shapes.RECTANGLE,{x:3.928,y:1.12,w:0.025,h:4.053,fill:{color:C.lightgray},line:{color:C.lightgray}});
 }
