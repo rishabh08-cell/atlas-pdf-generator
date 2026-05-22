@@ -416,7 +416,7 @@ function buildSlide8(pres, d) {
   ftr(s,pres,d.brandName,d.domain);
   const rows=d.brandVisibilityByPlatform;
   if(!rows||rows.length===0){s.addText("No platform visibility data available.",{x:0.414,y:2.987,w:7.443,h:0.533,fontSize:12,color:C.slate,align:"center",fontFace:"Calibri"});return;}
-  const platNames=Object.keys(rows[0]).filter(k=>k!=='theme'),themeColW=3.2,dataColW=(9.5-themeColW)/platNames.length,startX=0.25,headerY=1.08,rowH=0.35;
+  const platNames=Object.keys(rows[0]).filter(k=>k!=='theme'),themeColW=2.4,dataColW=(7.857-themeColW)/platNames.length,startX=0.25,headerY=1.08,rowH=0.35;
   s.addShape(pres.shapes.RECTANGLE,{x:startX,y:headerY,w:7.857,h:rowH,fill:{color:C.navy},line:{color:C.navy}});
   s.addText("Themes",{x:startX+0.08,y:headerY+0.07,w:themeColW-0.12,h:rowH-0.1,fontSize:8,bold:true,color:C.white,fontFace:"Calibri"});
   platNames.forEach((pn,pi)=>{
