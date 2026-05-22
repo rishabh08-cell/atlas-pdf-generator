@@ -525,58 +525,64 @@ function buildSlide14(pres, d) {
 
 function buildSlide15(pres, d) {
   const s=pres.addSlide();
-  s.background={color:C.offwhite};
-  staticHdr(s,pres,"Your path to GEO dominance",d.brandName);
+  s.background={color:C.white};
+  staticHdr(s,pres,"The Content Strategy : Topical Authority",d.brandName);
 
-  // Eyebrow label
-  s.addText("THE ENGAGEMENT",{x:0.35,y:0.72,w:3.5,h:0.26,fontSize:10,bold:true,color:C.orange,fontFace:"Calibri",charSpacing:2});
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:0.68,w:9.4,h:0.62,fill:{color:"EEF0FF"},line:{color:C.lightgray},rectRadius:0.08});
+  s.addText("LLM Recommendations",{x:0.5,y:0.74,w:3.2,h:0.48,fontSize:12,bold:true,italic:true,color:C.navy,fontFace:"Calibri"});
+  s.addText("\u221D",{x:3.7,y:0.74,w:0.5,h:0.48,fontSize:16,color:C.navy,align:"center",fontFace:"Calibri"});
+  s.addText("RRF Score = \u03A3 [1 / (60 + SERP position)]",{x:4.2,y:0.74,w:5.3,h:0.48,fontSize:12,bold:true,italic:true,color:C.navy,fontFace:"Calibri",wrap:true});
 
-  // Right side meta
-  s.addText("90-day sprint",{x:7.6,y:0.72,w:2.1,h:0.26,fontSize:11,bold:true,color:C.navy,fontFace:"Calibri",align:"right"});
-  s.addText("Three phases \u00B7 One outcome",{x:6.8,y:0.96,w:2.9,h:0.22,fontSize:9,color:C.slate,fontFace:"Calibri",align:"right"});
+  s.addText("Illustration",{x:0.3,y:1.4,w:2,h:0.28,fontSize:10,bold:true,color:C.navy,fontFace:"Calibri"});
 
-  // Big tagline
-  s.addText([
-    {text:"Your path to GEO ",options:{color:C.darkgray,bold:true}},
-    {text:"dominance.",options:{color:C.navy,bold:true,italic:true}}
-  ],{x:0.35,y:1.0,w:7.0,h:0.7,fontSize:26,fontFace:"Calibri",valign:"middle"});
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:1.72,w:0.8,h:0.28,fill:{color:C.navy},line:{color:C.navy},rectRadius:0.05});
+  s.addText("Brand A",{x:0.3,y:1.72,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
 
-  const cards=[
-    {n:"1",label:"AUDIT & MAP",title:"Executive GEO assessment",
-     body:"A comprehensive audit of your AI search visibility, prompt performance, and competitor gaps.",
-     bullets:["100+ prompt benchmark across themes","Competitor & share-of-voice map","Citation & source-authority audit"],
-     weeks:"Weeks 1\u20132",accent:C.navy,badgeFill:"EEF0FF",badgeText:C.navy,arrow:"\u23F1"},
-    {n:"2",label:"STRATEGIZE",title:"Co-develop GEO playbook",
-     body:"A custom roadmap aligned to your revenue KPIs \u2014 prompt targets, content strategy, schema and off-page signals.",
-     bullets:["Prompt-to-page coverage map","Content, schema & chunking plan","Authority & community playbook"],
-     weeks:"Weeks 3\u20134",accent:C.orange,badgeFill:"FDECDF",badgeText:C.orange,arrow:"\u23F1"},
-    {n:"3",label:"BUILD & LAUNCH",title:"Program kickoff",
-     body:"Ship new pages, schema and off-page signals (Wikipedia, Reddit, G2) \u2014 re-run the prompt set monthly.",
-     bullets:["New & optimised pages, shipped","Schema, FAQ & chunking rollout","Monthly visibility-lift reporting"],
-     weeks:"Weeks 5\u201312",accent:C.teal,badgeFill:"DDF0E8",badgeText:C.teal,arrow:"\u2192"}
-  ];
+  const hX15=[0.3,2.05,2.7],hW15=[1.72,0.62,0.9];
+  s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.04,w:3.28,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
+  [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15[i]+0.04,y:2.07,w:hW15[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
 
-  const cW=3.05,cH=3.55,cY=1.95,gap=0.18,sx15=0.35;
+  s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:2.36,w:3.28,h:0.3,fill:{color:C.offwhite},line:{color:C.lightgray}});
+  s.addText("Best Credit Card for Travellers",{x:0.36,y:2.39,w:1.66,h:0.24,fontSize:7.5,color:C.darkgray,fontFace:"Calibri"});
+  s.addText("#1",{x:2.09,y:2.39,w:0.54,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+  s.addText("0.0164",{x:2.74,y:2.39,w:0.8,h:0.24,fontSize:7.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
 
-  cards.forEach((c,i)=>{
-    const x=sx15+i*(cW+gap);
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x,y:cY,w:cW,h:cH,fill:{color:C.white},line:{color:C.lightgray,pt:1},rectRadius:0.12});
-    s.addShape(pres.shapes.OVAL,{x:x+0.15,y:cY+0.18,w:0.32,h:0.32,fill:{color:c.accent},line:{color:c.accent}});
-    s.addText(c.n,{x:x+0.15,y:cY+0.18,w:0.32,h:0.32,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
-    s.addText(c.label,{x:x+0.55,y:cY+0.2,w:cW-0.65,h:0.28,fontSize:9,bold:true,color:C.slate,fontFace:"Calibri",charSpacing:1});
-    s.addText(c.title,{x:x+0.18,y:cY+0.55,w:cW-0.36,h:0.4,fontSize:13,bold:true,color:C.darkgray,fontFace:"Calibri",wrap:true});
-    s.addText(c.body,{x:x+0.18,y:cY+1.0,w:cW-0.36,h:0.85,fontSize:9,color:C.slate,fontFace:"Calibri",wrap:true,valign:"top"});
-    s.addShape(pres.shapes.RECTANGLE,{x:x+0.18,y:cY+1.92,w:cW-0.36,h:0.012,fill:{color:C.lightgray},line:{color:C.lightgray}});
-    c.bullets.forEach((b,bi)=>{
-      s.addText(b,{x:x+0.18,y:cY+2.0+bi*0.26,w:cW-0.36,h:0.24,fontSize:9,color:C.darkgray,fontFace:"Calibri",wrap:true});
-    });
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:x+0.18,y:cY+cH-0.42,w:1.35,h:0.3,fill:{color:c.badgeFill},line:{color:c.badgeFill},rectRadius:0.05});
-    s.addText(c.arrow+"  "+c.weeks,{x:x+0.22,y:cY+cH-0.42,w:1.27,h:0.3,fontSize:9,bold:true,color:c.badgeText,fontFace:"Calibri",valign:"middle"});
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:3.8,y:1.72,w:0.8,h:0.28,fill:{color:C.navy},line:{color:C.navy},rectRadius:0.05});
+  s.addText("Brand B",{x:3.8,y:1.72,w:0.8,h:0.28,fontSize:7.5,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+
+  const bTableY=2.04;
+  const hX15b=[3.8,5.6,6.3],hW15b=[1.78,0.68,0.88];
+  s.addShape(pres.shapes.RECTANGLE,{x:3.8,y:bTableY,w:3.38,h:0.3,fill:{color:C.navy},line:{color:C.navy}});
+  [["Query","Rank","RRF Score"]].flat().forEach((h,i)=>s.addText(h,{x:hX15b[i]+0.04,y:bTableY+0.03,w:hW15b[i]-0.06,h:0.24,fontSize:7.5,bold:true,color:C.white,fontFace:"Calibri",align:"center"}));
+
+  [["Best Credit Card for Travellers","#4","0.0156"],
+   ["Travel On A Budget","#5","0.0154"],
+   ["USe Reward Points for Flights","#6","0.0152"],
+   ["Cheapest Hotel Tricks on Your Credit Card","#4","0.0156"],
+   ["Eligibility for Credit Card","#7","0.0149"],
+   ["Total","","0.0767"]].forEach((r,ri)=>{
+    const y=bTableY+0.32+ri*0.28,bg=ri%2===0?C.offwhite:C.white;
+    s.addShape(pres.shapes.RECTANGLE,{x:3.8,y,w:3.38,h:0.28,fill:{color:bg},line:{color:C.lightgray}});
+    s.addText(r[0],{x:3.86,y:y+0.04,w:1.7,h:0.22,fontSize:6.5,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    s.addText(r[1],{x:5.64,y:y+0.04,w:0.6,h:0.22,fontSize:6.5,color:C.darkgray,align:"center",fontFace:"Calibri"});
+    s.addText(r[2],{x:6.34,y:y+0.04,w:0.8,h:0.22,fontSize:6.5,bold:ri===5,color:ri===5?C.navy:C.darkgray,align:"center",fontFace:"Calibri"});
   });
 
-  s.addText("pepper",{x:0.35,y:5.25,w:1.0,h:0.22,fontSize:9,bold:true,color:C.navy,fontFace:"Calibri"});
-}
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.3,y:4.52,w:6.88,h:0.52,fill:{color:C.yellow},line:{color:C.yellow},rectRadius:0.08});
+  s.addText("For AI visibility, Brand B >>>> Brand A",{x:0.3,y:4.52,w:6.88,h:0.52,fontSize:13,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
 
+  s.addShape(pres.shapes.OVAL,{x:7.55,y:2.04,w:0.12,h:0.12,fill:{color:C.navy},line:{color:C.navy}});
+  s.addText([
+    {text:"Building Topical Authority ",options:{fontSize:9,bold:true,color:C.navy,fontFace:"Calibri"}},
+    {text:"still tops the content priority, with the relevant technical optimisation for each URL",options:{fontSize:8,color:C.darkgray,fontFace:"Calibri"}}
+  ],{x:7.72,y:1.98,w:2.0,h:0.72,wrap:true});
+
+  s.addShape(pres.shapes.OVAL,{x:7.55,y:2.88,w:0.12,h:0.12,fill:{color:C.navy},line:{color:C.navy}});
+  s.addText([
+    {text:"The key reason of smaller publishers/brands doing well on LLM queries is their ",options:{fontSize:8,color:C.darkgray,fontFace:"Calibri"}},
+    {text:"trust-signalling coverage",options:{fontSize:9,bold:true,color:"CC0000",fontFace:"Calibri"}}
+  ],{x:7.72,y:2.82,w:2.0,h:0.78,wrap:true});
+}
 function buildSlide16(pres, d) {
   const s=pres.addSlide();
   s.background={color:C.white};
@@ -645,6 +651,61 @@ function buildSlide18(pres, d) {
   s.addText("We are hosting some free GEO workshops for corporates and if you think you'd be interested in the same, please write to us",{x:0.55,y:3.92,w:9.0,h:0.76,fontSize:12,color:C.purple,align:"center",valign:"middle",fontFace:"Calibri",wrap:true});
 }
 
+function buildSlide19(pres, d) {
+  const s=pres.addSlide();
+  s.background={color:C.offwhite};
+  staticHdr(s,pres,"Your path to GEO dominance",d.brandName);
+
+  // Eyebrow label
+  s.addText("THE ENGAGEMENT",{x:0.35,y:0.72,w:3.5,h:0.26,fontSize:10,bold:true,color:C.orange,fontFace:"Calibri",charSpacing:2});
+
+  // Right side meta
+  s.addText("90-day sprint",{x:7.6,y:0.72,w:2.1,h:0.26,fontSize:11,bold:true,color:C.navy,fontFace:"Calibri",align:"right"});
+  s.addText("Three phases \u00B7 One outcome",{x:6.8,y:0.96,w:2.9,h:0.22,fontSize:9,color:C.slate,fontFace:"Calibri",align:"right"});
+
+  // Big tagline
+  s.addText([
+    {text:"Your path to GEO ",options:{color:C.darkgray,bold:true}},
+    {text:"dominance.",options:{color:C.navy,bold:true,italic:true}}
+  ],{x:0.35,y:1.0,w:7.0,h:0.7,fontSize:26,fontFace:"Calibri",valign:"middle"});
+
+  const cards=[
+    {n:"1",label:"AUDIT & MAP",title:"Executive GEO assessment",
+     body:"A comprehensive audit of your AI search visibility, prompt performance, and competitor gaps.",
+     bullets:["100+ prompt benchmark across themes","Competitor & share-of-voice map","Citation & source-authority audit"],
+     weeks:"Weeks 1\u20132",accent:C.navy,badgeFill:"EEF0FF",badgeText:C.navy,arrow:"\u23F1"},
+    {n:"2",label:"STRATEGIZE",title:"Co-develop GEO playbook",
+     body:"A custom roadmap aligned to your revenue KPIs \u2014 prompt targets, content strategy, schema and off-page signals.",
+     bullets:["Prompt-to-page coverage map","Content, schema & chunking plan","Authority & community playbook"],
+     weeks:"Weeks 3\u20134",accent:C.orange,badgeFill:"FDECDF",badgeText:C.orange,arrow:"\u23F1"},
+    {n:"3",label:"BUILD & LAUNCH",title:"Program kickoff",
+     body:"Ship new pages, schema and off-page signals (Wikipedia, Reddit, G2) \u2014 re-run the prompt set monthly.",
+     bullets:["New & optimised pages, shipped","Schema, FAQ & chunking rollout","Monthly visibility-lift reporting"],
+     weeks:"Weeks 5\u201312",accent:C.teal,badgeFill:"DDF0E8",badgeText:C.teal,arrow:"\u2192"}
+  ];
+
+  const cW=3.05,cH=3.55,cY=1.95,gap=0.18,sx15=0.35;
+
+  cards.forEach((c,i)=>{
+    const x=sx15+i*(cW+gap);
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x,y:cY,w:cW,h:cH,fill:{color:C.white},line:{color:C.lightgray,pt:1},rectRadius:0.12});
+    s.addShape(pres.shapes.OVAL,{x:x+0.15,y:cY+0.18,w:0.32,h:0.32,fill:{color:c.accent},line:{color:c.accent}});
+    s.addText(c.n,{x:x+0.15,y:cY+0.18,w:0.32,h:0.32,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addText(c.label,{x:x+0.55,y:cY+0.2,w:cW-0.65,h:0.28,fontSize:9,bold:true,color:C.slate,fontFace:"Calibri",charSpacing:1});
+    s.addText(c.title,{x:x+0.18,y:cY+0.55,w:cW-0.36,h:0.4,fontSize:13,bold:true,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    s.addText(c.body,{x:x+0.18,y:cY+1.0,w:cW-0.36,h:0.85,fontSize:9,color:C.slate,fontFace:"Calibri",wrap:true,valign:"top"});
+    s.addShape(pres.shapes.RECTANGLE,{x:x+0.18,y:cY+1.92,w:cW-0.36,h:0.012,fill:{color:C.lightgray},line:{color:C.lightgray}});
+    c.bullets.forEach((b,bi)=>{
+      s.addText(b,{x:x+0.18,y:cY+2.0+bi*0.26,w:cW-0.36,h:0.24,fontSize:9,color:C.darkgray,fontFace:"Calibri",wrap:true});
+    });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:x+0.18,y:cY+cH-0.42,w:1.35,h:0.3,fill:{color:c.badgeFill},line:{color:c.badgeFill},rectRadius:0.05});
+    s.addText(c.arrow+"  "+c.weeks,{x:x+0.22,y:cY+cH-0.42,w:1.27,h:0.3,fontSize:9,bold:true,color:c.badgeText,fontFace:"Calibri",valign:"middle"});
+  });
+
+  s.addText("pepper",{x:0.35,y:5.25,w:1.0,h:0.22,fontSize:9,bold:true,color:C.navy,fontFace:"Calibri"});
+}
+
+
 // ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
 function buildPPTX(data, outputPath) {
   const pres=new pptxgen();
@@ -666,6 +727,7 @@ function buildPPTX(data, outputPath) {
   buildSlide16(pres,data);
   buildSlide17(pres,data);
   buildSlide18(pres,data);
+  buildSlide19(pres,data);
   pres.writeFile({ fileName:outputPath });
   console.log("\u2705 PPTX written:", outputPath, "(15 slides)");
 }
