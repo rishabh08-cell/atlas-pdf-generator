@@ -269,7 +269,7 @@ function buildSlide3(pres, d) {
   ftr(s,pres,d.brandName,d.domain);
   const brands=d.leaderboard;
   if (brands.length>0) {
-    const maxM=Math.max(...brands.map(b=>b.mentions),1),barW=1.0,gap=0.55,startX=0.3,cb=4.65,ch=2.6;
+    const maxM=Math.max(...brands.map(b=>b.mentions),1),barW=0.85,gap=0.3,startX=0.25,cb=4.55,ch=2.4;
     brands.forEach((brand,i)=>{
       const x=startX+i*(barW+gap),barH=Math.max((brand.mentions/maxM)*ch,0.15),barY=Math.max(cb-barH,1.55),isB=brand.name===d.brandName;
       const col=isB?C.orange:(i===0?C.teal:"BDBDCD");
@@ -281,17 +281,17 @@ function buildSlide3(pres, d) {
     });
   }
   const comps=d.competitorMentions.slice(0,10),maxPct=Math.max(...comps.map(c=>c.percentage),1);
-  s.addText("Competitor Mentions vs. "+d.brandName,{x:4.135,y:1.173,w:3.887,h:0.267,fontSize:9,bold:true,color:C.slate,fontFace:"Calibri"});
+  s.addText("Competitor Mentions vs. "+d.brandName,{x:3.7,y:1.0,w:4.35,h:0.267,fontSize:9,bold:true,color:C.slate,fontFace:"Calibri"});
   comps.forEach((comp,i)=>{
     const y=1.42+i*0.33,isB=comp.name===d.brandName;
-    s.addShape(pres.shapes.OVAL,{x:4.135,y:y+0.04,w:0.182,h:0.235,fill:{color:isB?C.purple:C.lightgray},line:{color:isB?C.purple:C.lightgray}});
-    s.addText(comp.name[0].toUpperCase(),{x:4.135,y:y+0.04,w:0.182,h:0.235,fontSize:7,bold:true,color:isB?C.white:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
-    s.addText(comp.name,{x:4.35,y:y+0.05,w:1.158,h:0.213,fontSize:8,bold:isB,color:isB?C.purple:C.navy,fontFace:"Calibri"});
-    const bw=Math.min((comp.percentage/maxPct)*2.6,2.6);
-    s.addShape(pres.shapes.RECTANGLE,{x:5.541,y:y+0.06,w:Math.max(bw,0.05),h:0.192,fill:{color:isB?C.navy:C.lightgray},line:{color:isB?C.navy:C.lightgray}});
-    s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:5.65+bw,y:y+0.05,w:Math.max(8.05-(5.65+bw),0.6),h:0.213,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
+    s.addShape(pres.shapes.OVAL,{x:3.7,y:y+0.04,w:0.182,h:0.235,fill:{color:isB?C.purple:C.lightgray},line:{color:isB?C.purple:C.lightgray}});
+    s.addText(comp.name[0].toUpperCase(),{x:3.7,y:y+0.04,w:0.182,h:0.235,fontSize:7,bold:true,color:isB?C.white:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
+    s.addText(comp.name,{x:3.92,y:y+0.05,w:1.158,h:0.213,fontSize:8,bold:isB,color:isB?C.purple:C.navy,fontFace:"Calibri"});
+    const bw=Math.min((comp.percentage/maxPct)*2.0,2.0);
+    s.addShape(pres.shapes.RECTANGLE,{x:5.1,y:y+0.06,w:Math.max(bw,0.05),h:0.192,fill:{color:isB?C.navy:C.lightgray},line:{color:isB?C.navy:C.lightgray}});
+    s.addText(comp.percentage+"% · "+comp.mentions+" mentions",{x:5.2+bw,y:y+0.05,w:Math.max(8.05-(5.2+bw),0.85),h:0.213,fontSize:7.5,color:C.slate,fontFace:"Calibri"});
   });
-  s.addShape(pres.shapes.RECTANGLE,{x:3.928,y:1.12,w:0.025,h:4.053,fill:{color:C.lightgray},line:{color:C.lightgray}});
+  s.addShape(pres.shapes.RECTANGLE,{x:3.55,y:1.12,w:0.02,h:3.9,fill:{color:C.lightgray},line:{color:C.lightgray}});
 }
 
 // ─── SLIDE 4: Top Cited Sources ────────────────────────────────────────────
