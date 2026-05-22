@@ -301,7 +301,7 @@ function buildSlide4(pres, d) {
   ftr(s,pres,d.brandName,d.domain);
   const domains=d.domainCitations.slice(0,9);
   s.addShape(pres.shapes.RECTANGLE,{x:0.207,y:1.152,w:3.639,h:0.299,fill:{color:C.navy},line:{color:C.navy}});
-  [["Domain",0.35],["Pages",2.8],["Responses",3.65]].forEach(([h,x])=>s.addText(h,{x,y:1.173,w:0.91,h:0.256,fontSize:8,bold:true,color:C.white,fontFace:"Calibri"}));
+  [["Domain",0.289,1.985],["Pages",2.332,0.496],["Responses",3.035,0.744]].forEach(([h,x,w])=>s.addText(h,{x,y:1.173,w,h:0.256,fontSize:8,bold:true,color:C.white,fontFace:"Calibri"}));
   domains.forEach((row,i)=>{
     const y=1.38+i*0.34,bg=i%2===0?C.offwhite:C.white;
     s.addShape(pres.shapes.RECTANGLE,{x:0.207,y,w:3.639,h:0.341,fill:{color:bg},line:{color:C.lightgray}});
