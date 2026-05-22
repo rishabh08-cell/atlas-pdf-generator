@@ -331,7 +331,7 @@ function buildSlide5(pres, d) {
   if (!matrix||matrix.length===0){s.addText("No competitor visibility matrix data available.",{x:0.414,y:2.667,w:7.443,h:0.533,fontSize:12,color:C.slate,align:"center",fontFace:"Calibri"});return;}
   const compNames=[];
   matrix.forEach(row=>{if(row.competitors)Object.keys(row.competitors).forEach(k=>{if(!compNames.includes(k))compNames.push(k);});});
-  const allCols=[d.brandName,...compNames].slice(0,10),themeColW=1.9,dataColW=(9.5-themeColW)/allCols.length,startX=0.25,headerY=1.08,rowH=0.32;
+  const allCols=[d.brandName,...compNames].slice(0,10),themeColW=1.9,dataColW=(7.857-themeColW)/allCols.length,startX=0.25,headerY=1.08,rowH=0.32;
   s.addShape(pres.shapes.RECTANGLE,{x:startX,y:headerY,w:7.857,h:rowH,fill:{color:C.navy},line:{color:C.navy}});
   s.addText("Topic",{x:startX+0.05,y:headerY+0.05,w:themeColW-0.08,h:rowH-0.08,fontSize:7,bold:true,color:C.white,fontFace:"Calibri"});
   allCols.forEach((col,ci)=>{
