@@ -235,7 +235,7 @@ function buildSlide1(pres, d) {
   } else {
     s.addText("pepper",{x:9.18,y:0.38,w:0.62,h:0.18,fontSize:9,bold:true,color:C.navy,align:"center",valign:"middle",fontFace:"Calibri"});
   }
-  s.addText("GEO AUDIT REPORT",{x:0.5,y:1.08,w:6,h:0.28,fontSize:9,color:C.orange,bold:true,charSpacing:4,fontFace:"Calibri"});
+  s.addText("",{x:0.5,y:1.08,w:6,h:0.28,fontSize:9,color:C.orange,bold:true,charSpacing:4,fontFace:"Calibri"});
   s.addText(d.brandName,{x:0.5,y:1.38,w:7,h:1.18,fontSize:50,bold:true,color:C.white,fontFace:"Calibri"});
   s.addText(d.domain,{x:0.5,y:2.6,w:5,h:0.38,fontSize:13,color:C.lilac,fontFace:"Calibri"});
   s.addShape(pres.shapes.RECTANGLE,{x:0.5,y:3.02,w:1.2,h:0.04,fill:{color:C.orange},line:{color:C.orange}});
@@ -773,7 +773,7 @@ function buildSlide20(pres, d) {
   });
 
   // URL above QR
-  s.addText("calendly.com/kishanpanpalia", {
+  s.addText("", {
     x:cardX, y:cardY+0.25, w:cardW, h:0.3,
     fontSize:12, color:C.darkgray, fontFace:"Calibri", align:"center"
   });
