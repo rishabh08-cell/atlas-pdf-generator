@@ -640,17 +640,6 @@ function buildSlide17(pres, d) {
   s.addText("Note: The weightage percentage is a relative effort guide. If you're putting X effort on a source with 2% weight, then a source with 8% weight deserves 4X effort. Prioritize accordingly.",{x:0.25,y:4.85,w:9.5,h:0.32,fontSize:7,italic:true,color:C.slate,fontFace:"Calibri",wrap:true});
 }
 
-function buildSlide18(pres, d) {
-  const s=pres.addSlide(); s.background={color:C.white};
-  logoPill(s, pres);
-  s.addText("Do you think this was helpful and want to dive deeper?",{x:0.35,y:0.55,w:9.3,h:1.5,fontSize:32,bold:true,color:C.navy,fontFace:"Calibri",wrap:true});
-  s.addText("Reach us at +14157545133",{x:0.35,y:2.3,w:6,h:0.38,fontSize:14,color:C.darkgray,fontFace:"Calibri"});
-  s.addText("or write to us at kishan@peppercontent.io",{x:0.35,y:2.68,w:6,h:0.38,fontSize:14,color:C.darkgray,fontFace:"Calibri"});
-  s.addShape(pres.shapes.RECTANGLE,{x:0,y:3.62,w:10,h:0.06,fill:{color:C.yellow},line:{color:C.yellow}});
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:0.35,y:3.82,w:9.3,h:0.96,fill:{color:"FFF3C4"},line:{color:C.yellow},rectRadius:0.08});
-  s.addText("We are hosting some free GEO workshops for corporates and if you think you'd be interested in the same, please write to us",{x:0.55,y:3.92,w:9.0,h:0.76,fontSize:12,color:C.purple,align:"center",valign:"middle",fontFace:"Calibri",wrap:true});
-}
-
 function buildSlide19(pres, d) {
   const s=pres.addSlide();
   s.background={color:C.offwhite};
@@ -726,10 +715,9 @@ function buildPPTX(data, outputPath) {
   buildSlide15(pres,data);
   buildSlide16(pres,data);
   buildSlide17(pres,data);
-  buildSlide18(pres,data);
   buildSlide19(pres,data);
   pres.writeFile({ fileName:outputPath });
-  console.log("\u2705 PPTX written:", outputPath, "(15 slides)");
+  console.log("\u2705 PPTX written:", outputPath, "(14 slides)");
 }
 
 // ─── Helper: generate a single report file (used by both endpoints) ─────────
