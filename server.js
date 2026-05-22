@@ -695,7 +695,6 @@ function buildSlide19(pres, d) {
 }
 
 
-//
 
 // ─── SLIDE 20: CTA / End slide ──────────────────────────────────────────────
 function buildSlide20(pres, d) {
@@ -808,7 +807,7 @@ function buildSlide20(pres, d) {
     fontFace:"Calibri", charSpacing:2
   });
 }
- ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
+// ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
 function buildPPTX(data, outputPath) {
   const pres=new pptxgen();
   pres.layout="LAYOUT_16x9";
