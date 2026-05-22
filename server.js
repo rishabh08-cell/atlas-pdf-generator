@@ -690,8 +690,6 @@ function buildSlide19(pres, d) {
     s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:x+0.18,y:cY+cH-0.42,w:1.35,h:0.3,fill:{color:c.badgeFill},line:{color:c.badgeFill},rectRadius:0.05});
     s.addText(c.arrow+"  "+c.weeks,{x:x+0.22,y:cY+cH-0.42,w:1.27,h:0.3,fontSize:9,bold:true,color:c.badgeText,fontFace:"Calibri",valign:"middle"});
   });
-
-  s.addText("pepper",{x:0.35,y:5.25,w:1.0,h:0.22,fontSize:9,bold:true,color:C.navy,fontFace:"Calibri"});
 }
 
 
