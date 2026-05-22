@@ -695,7 +695,120 @@ function buildSlide19(pres, d) {
 }
 
 
-// ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
+//
+
+// ─── SLIDE 20: CTA / End slide ──────────────────────────────────────────────
+function buildSlide20(pres, d) {
+  const s = pres.addSlide();
+  s.background = { color: C.offwhite };
+
+  // Pepper logo pill (top-right) + "GEO Audit Report" label
+  logoPill(s, pres);
+  s.addText("GEO Audit\nReport", {
+    x:8.0, y:0.18, w:1.7, h:0.5,
+    fontSize:10, bold:true, color:C.darkgray,
+    align:"right", fontFace:"Calibri"
+  });
+
+  // Eyebrow
+  s.addText("NEXT STEP", {
+    x:0.45, y:0.95, w:3.0, h:0.28,
+    fontSize:11, bold:true, color:C.orange,
+    fontFace:"Calibri", charSpacing:3
+  });
+
+  // Headline: "Ready to dive\ndeeper?"
+  s.addText([
+    { text:"Ready to dive\n", options:{ color:C.darkgray, bold:true } },
+    { text:"deeper?",         options:{ color:C.navy, bold:true, italic:true } }
+  ], {
+    x:0.45, y:1.25, w:5.8, h:1.9,
+    fontSize:48, fontFace:"Calibri", valign:"top"
+  });
+
+  // Body copy
+  s.addText(
+    "Book a 30-minute working session with our GEO team. We'll unpack your visibility gaps across ChatGPT, Perplexity and AI Overviews and scope a 90-day lift.",
+    {
+      x:0.45, y:3.25, w:5.6, h:1.1,
+      fontSize:12, color:C.darkgray, fontFace:"Calibri", wrap:true
+    }
+  );
+
+  // Contact rows
+  const rowY=4.45, rowH=0.28;
+  const rows=[
+    { label:"SCAN TO BOOK", value:"Point your camera at the code  \u2192" },
+    { label:"OR WRITE TO",  value:"kishan@peppercontent.io" },
+    { label:"OR CALL",      value:"+1 415 754 5133" }
+  ];
+  rows.forEach((r,i)=>{
+    s.addText(r.label, {
+      x:0.45, y:rowY+i*rowH, w:1.6, h:rowH,
+      fontSize:9, bold:true, color:C.slate,
+      fontFace:"Calibri", charSpacing:2
+    });
+    s.addText(r.value, {
+      x:2.05, y:rowY+i*rowH, w:3.9, h:rowH,
+      fontSize:11, color:C.darkgray, fontFace:"Calibri"
+    });
+  });
+
+  // Right-side QR card
+  const cardX=6.55, cardY=0.85, cardW=3.1, cardH=4.2;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+    x:cardX, y:cardY, w:cardW, h:cardH,
+    fill:{ color:C.white }, line:{ color:"EAEAEA", pt:1 },
+    rectRadius:0.12, shadow:makeShadow()
+  });
+
+  // Corner ticks (orange brackets)
+  const tick=0.18;
+  [
+    [cardX+0.1,        cardY+0.1],
+    [cardX+cardW-0.1-tick, cardY+0.1],
+    [cardX+0.1,        cardY+cardH-0.1-tick],
+    [cardX+cardW-0.1-tick, cardY+cardH-0.1-tick]
+  ].forEach(([tx,ty])=>{
+    s.addShape(pres.shapes.RECTANGLE, {
+      x:tx, y:ty, w:tick, h:0.02,
+      fill:{ color:C.orange }, line:{ color:C.orange }
+    });
+    s.addShape(pres.shapes.RECTANGLE, {
+      x:tx, y:ty, w:0.02, h:tick,
+      fill:{ color:C.orange }, line:{ color:C.orange }
+    });
+  });
+
+  // URL above QR
+  s.addText("calendly.com/kishanpanpalia", {
+    x:cardX, y:cardY+0.25, w:cardW, h:0.3,
+    fontSize:12, color:C.darkgray, fontFace:"Calibri", align:"center"
+  });
+
+  // QR image
+  const qrPath = path.join(__dirname, "public", "logos", "Kishan's Calendly.png");
+  if (fs.existsSync(qrPath)) {
+    s.addImage({
+      path: qrPath,
+      x: cardX+0.35, y: cardY+0.65, w: cardW-0.7, h: cardW-0.7,
+      sizing: { type:"contain", w: cardW-0.7, h: cardW-0.7 }
+    });
+  }
+
+  // Caption under QR
+  s.addText("Schedule with Kishan", {
+    x:cardX, y:cardY+cardH-0.7, w:cardW, h:0.28,
+    fontSize:14, bold:true, color:C.darkgray,
+    align:"center", fontFace:"Calibri"
+  });
+  s.addText("PEPPER.INC", {
+    x:cardX, y:cardY+cardH-0.42, w:cardW, h:0.24,
+    fontSize:10, color:C.slate, align:"center",
+    fontFace:"Calibri", charSpacing:2
+  });
+}
+ ─── STEP 3: Build PPTX ─────────────────────────────────────────────────────
 function buildPPTX(data, outputPath) {
   const pres=new pptxgen();
   pres.layout="LAYOUT_16x9";
@@ -716,6 +829,8 @@ function buildPPTX(data, outputPath) {
   buildSlide16(pres,data);
   buildSlide17(pres,data);
   buildSlide19(pres,data);
+  buildSlide20(pres,data);
+
   pres.writeFile({ fileName:outputPath });
   console.log("\u2705 PPTX written:", outputPath, "(14 slides)");
 }
