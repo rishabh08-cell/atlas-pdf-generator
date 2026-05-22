@@ -701,13 +701,8 @@ function buildSlide20(pres, d) {
   const s = pres.addSlide();
   s.background = { color: C.offwhite };
 
-  // Pepper logo pill (top-right) + "GEO Audit Report" label
+  // Pepper logo pill (top-right)
   logoPill(s, pres);
-  s.addText("GEO Audit\nReport", {
-    x:8.0, y:0.18, w:1.7, h:0.5,
-    fontSize:10, bold:true, color:C.darkgray,
-    align:"right", fontFace:"Calibri"
-  });
 
   // Eyebrow
   s.addText("NEXT STEP", {
