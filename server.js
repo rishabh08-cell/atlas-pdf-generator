@@ -4,7 +4,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const multer = require("multer")
+const multer = require("multer"
 const XLSX = require("xlsx");
 const JSZip = require("jszip");
 
@@ -839,7 +839,7 @@ async function generateSingleReport(reportId, format) {
 
   const pdfOut = path.join(TMP, id + ".pdf");
   console.log("\u{1F4C4} Converting to PDF...");
-  { let pdfOk = false; for (let attempt = 1; attempt <= 3; attempt++) { try { try { execSync("killall -9 soffice.bin 2>/dev/null || true", { timeout: 5000 }); } catch {} execSync(`soffice --headless --norestore --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 120000 }); pdfOk = true; break; } catch (e) { console.log(`  ⚠️ soffice attempt ${attempt}/3 failed: ${e.message}`); if (attempt < 3) await new Promise(r => setTimeout(r, 2000)); } } if (!pdfOk) throw new Error("PDF conversion failed after 3 attempts — soffice crashed"); }
+  { let pdfOk = false; for (let attempt = 1; attempt <= 3; attempt++) { try { try { execSync("killall -9 soffice.bin 2>/dev/null || true", { timeout: 5000 }); } catch {} execSync(`soffice --headless --norestore -env:UserInstallation=file:///tmp/soffice-${id} --convert-to pdf --outdir ${TMP} ${pptxOut}`, { timeout: 120000 }); pdfOk = true; break; } catch (e) { console.log(`  ⚠️ soffice attempt ${attempt}/3 failed: ${e.message}`); if (attempt < 3) await new Promise(r => setTimeout(r, 2000)); } } if (!pdfOk) throw new Error("PDF conversion failed after 3 attempts — soffice crashed"); }
   try { fs.unlinkSync(pptxOut); } catch {}
   if (!fs.existsSync(pdfOut)) throw new Error("PDF conversion failed");
   return { filePath: pdfOut, brandName: data.brandName, ext: "pdf" };
