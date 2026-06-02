@@ -4,7 +4,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const multer = require("multer"
+const multer = require("multer")
 const XLSX = require("xlsx");
 const JSZip = require("jszip");
 
